@@ -51,13 +51,13 @@ public OnPluginStart()
 {
 	RegConsoleCmd("entW_find", Command_FindEnts, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("entW_dumpmap", Command_dumpmap, "Finds Entitys matching an argument", ADMFLAG_KICK);
-	RegConsoleCmd("dontannoyme", Command_dontannoyme);
+	RegConsoleCmd("hud", Command_dontannoyme);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Pre);
 	HookEvent("item_pickup", OnItemPickup);
 	
 	hudCookie = RegClientCookie("entWatch_displayhud", "EntWatch DisplayHud", CookieAccess_Protected);
 	
-	CreateTimer(6.0, Timer_PlayerRegenGrav, _, TIMER_REPEAT);	
+	CreateTimer(6.0, Timer_DisplayHud, _, TIMER_REPEAT);	
 }
 
 //-----------------------------------------------------------------------------
@@ -80,8 +80,6 @@ public Action:OnEntityTouch(entity, Client)
 	{
 		decl String:targetname[32];
 		decl String:temp[32];
-		decl String:tempA[32];
-		decl String:tempB[32];
 		new bool:recordExists=false;
 		
 		GetEntPropString(entity, Prop_Data, "m_iName", targetname, sizeof(targetname));
@@ -107,24 +105,31 @@ public Action:OnEntityTouch(entity, Client)
 					{
 						entArray[i][ent_id] = entity;
 						strcopy(entArray[i][ent_name], 32, targetname);
-						for(new x=0; x < GetEntityCount(); x++)
-						{
-							if(IsValidEdict(x))
-							{
-								GetEntityClassname(x, tempA, sizeof(tempA));
-								if(StrEqual(tempA, entArray[i][ent_buttontype]))
-								{
-									Entity_GetParentName(x, tempB, sizeof(tempB));
-									if(StrEqual(tempB, entArray[i][ent_name]))
-									{
-										entArray[i][ent_buttonid] = x;
-										SDKHook(x, SDKHook_Use, OnEntityUse);								
-									}
-								}
-							}
-						}
+						HookButton(i);
 						i = arrayMax;
 					}
+				}
+			}
+		}
+	}
+}
+
+public HookButton(i)
+{
+	decl String:tempA[32];
+	decl String:tempB[32];
+	for(new x=0; x < GetEntityCount(); x++)
+	{
+		if(IsValidEdict(x))
+		{
+			GetEntityClassname(x, tempA, sizeof(tempA));
+			if(StrEqual(tempA, entArray[i][ent_buttontype]))
+			{
+				Entity_GetParentName(x, tempB, sizeof(tempB));
+				if(StrEqual(tempB, entArray[i][ent_name]))
+				{
+					entArray[i][ent_buttonid] = x;
+					SDKHook(x, SDKHook_Use, OnEntityUse);								
 				}
 			}
 		}
@@ -376,7 +381,7 @@ public Action:Timer_Cooldown(Handle:timer, any:index)
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-public Action:Timer_PlayerRegenGrav(Handle:timer)
+public Action:Timer_DisplayHud(Handle:timer)
 {
 	if(configLoaded)
 	{
@@ -404,8 +409,7 @@ public Action:Timer_PlayerRegenGrav(Handle:timer)
 								StrCat(szText, sizeof(szText), "\n");						
 							}
 						}
-						//Format(szText, sizeof(szText), "%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n",entArray[0][ent_shortdesc], entArray[0][ent_ownername], entArray[1][ent_shortdesc], entArray[1][ent_ownername], entArray[2][ent_shortdesc], entArray[2][ent_ownername], entArray[3][ent_shortdesc], entArray[3][ent_ownername], entArray[4][ent_shortdesc], entArray[4][ent_ownername], entArray[5][ent_shortdesc], entArray[5][ent_ownername], entArray[6][ent_shortdesc], entArray[6][ent_ownername]);
-						
+			
 						new Handle:hBuffer = StartMessageOne("KeyHintText", i);
 						BfWriteByte(hBuffer, 1);
 						BfWriteString(hBuffer, szText);
