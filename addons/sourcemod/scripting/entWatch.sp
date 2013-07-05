@@ -49,8 +49,8 @@ public Plugin:myinfo =
 //-----------------------------------------------------------------------------
 public OnPluginStart()
 {
-	RegConsoleCmd("entW_find", Command_FindEnts);
-	RegConsoleCmd("entW_dumpmap", Command_dumpmap);
+	RegConsoleCmd("entW_find", Command_FindEnts, "Finds Entitys matching an argument", ADMFLAG_KICK);
+	RegConsoleCmd("entW_dumpmap", Command_dumpmap, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("dontannoyme", Command_dontannoyme);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Pre);
 	HookEvent("item_pickup", OnItemPickup);
