@@ -82,37 +82,49 @@ public Action:OnEntityTouch(entity, Client)
 		decl String:temp[32];
 		decl String:tempA[32];
 		decl String:tempB[32];
+		new bool:recordExists=false;
 		
 		GetEntPropString(entity, Prop_Data, "m_iName", targetname, sizeof(targetname));
 		
 		new i;
-		
+
 		for(i = 0; i < arrayMax; i++)
-		{ 
-			if(entArray[i][ent_id] == -1)
+		{
+			if(entArray[i][ent_id] == entity)
 			{
-				strcopy( temp, 32, entArray[i][ent_name] );
-				if(StrContains(targetname, temp, false) != -1)
+				recordExists=true;
+			}
+		}
+		
+		if(!recordExists)
+		{
+			for(i = 0; i < arrayMax; i++)
+			{ 
+				if(entArray[i][ent_id] == -1)
 				{
-					entArray[i][ent_id] = entity;
-					strcopy(entArray[i][ent_name], 32, targetname);
-					for(new x=0; x < GetEntityCount(); x++)
+					strcopy( temp, 32, entArray[i][ent_name] );
+					if(StrContains(targetname, temp, false) != -1)
 					{
-						if(IsValidEdict(x))
+						entArray[i][ent_id] = entity;
+						strcopy(entArray[i][ent_name], 32, targetname);
+						for(new x=0; x < GetEntityCount(); x++)
 						{
-							GetEntityClassname(x, tempA, sizeof(tempA));
-							if(StrEqual(tempA, entArray[i][ent_buttontype]))
+							if(IsValidEdict(x))
 							{
-								Entity_GetParentName(x, tempB, sizeof(tempB));
-								if(StrEqual(tempB, entArray[i][ent_name]))
+								GetEntityClassname(x, tempA, sizeof(tempA));
+								if(StrEqual(tempA, entArray[i][ent_buttontype]))
 								{
-									entArray[i][ent_buttonid] = x;
-									SDKHook(x, SDKHook_Use, OnEntityUse);								
+									Entity_GetParentName(x, tempB, sizeof(tempB));
+									if(StrEqual(tempB, entArray[i][ent_name]))
+									{
+										entArray[i][ent_buttonid] = x;
+										SDKHook(x, SDKHook_Use, OnEntityUse);								
+									}
 								}
 							}
 						}
+						i = arrayMax;
 					}
-					i = arrayMax;
 				}
 			}
 		}
@@ -322,17 +334,17 @@ public Action:Command_dumpmap(client, args)
 	PrintToConsole(client, "\n[entWatch]\nIf the ID is -1 it can't find the ent\n");
 	for (new i = 0; i < arrayMax; i++)
 	{
-		PrintToConsole(client, "\n");
-		PrintToConsole(client,"%d | Description: %s", i, entArray[i][ent_desc]);
-		PrintToConsole(client,"%d | Short Description: %s", i, entArray[i][ent_shortdesc]);
-		PrintToConsole(client,"%d | Entity Color: %s", i, entArray[i][ent_color]);
-		PrintToConsole(client,"%d | Entity Classname: %s", i, entArray[i][ent_name]);
-		PrintToConsole(client,"%d | Entity Type: %s", i, entArray[i][ent_type]);
-		PrintToConsole(client,"%d | Chat: %s", i, entArray[i][ent_chat]);
-		PrintToConsole(client,"%d | HUD: %s", i, entArray[i][ent_hud]);
-		PrintToConsole(client,"%d | Owner: %s", i, entArray[i][ent_ownername]);
-		PrintToConsole(client,"%d | ID: %d", i, entArray[i][ent_id]);
-		PrintToConsole(client,"%d | Owner ID: %d", i, entArray[i][ent_owner]);
+		PrintToChatAll("\n");
+		PrintToChatAll("%d | %s", i, entArray[i][ent_desc]);
+		PrintToChatAll("%d | %s", i, entArray[i][ent_shortdesc]);
+		PrintToChatAll("%d | %s", i, entArray[i][ent_color]);
+		PrintToChatAll("%d | %s", i, entArray[i][ent_name]);
+		PrintToChatAll("%d | %s", i, entArray[i][ent_type]);
+		PrintToChatAll("%d | %s", i, entArray[i][ent_chat]);
+		PrintToChatAll("%d | %s", i, entArray[i][ent_hud]);
+		PrintToChatAll("%d | %s", i, entArray[i][ent_ownername]);
+		PrintToChatAll("%d | %d", i, entArray[i][ent_id]);
+		PrintToChatAll("%d | %d", i, entArray[i][ent_owner]);
 	}
 }
 
