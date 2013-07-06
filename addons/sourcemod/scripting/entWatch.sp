@@ -54,6 +54,7 @@ public OnPluginStart()
 	RegConsoleCmd("entW_dumpmap", Command_dumpmap, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("hud", Command_dontannoyme);
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Pre);
+	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Pre);	
 	HookEvent("item_pickup", OnItemPickup);
 	
 	hudCookie = RegClientCookie("entWatch_displayhud", "EntWatch DisplayHud", CookieAccess_Protected);
@@ -79,35 +80,38 @@ public Action:OnEntityTouch(entity, Client)
 {
 	if(configLoaded)
 	{
-		decl String:targetname[32];
-		decl String:temp[32];
-		new bool:recordExists=false;
-		
-		GetEntPropString(entity, Prop_Data, "m_iName", targetname, sizeof(targetname));
-		
-		new i;
+		if(IsPlayerAlive(Client))
+		{
+			decl String:targetname[32];
+			decl String:temp[32];
+			new bool:recordExists=false;
+			
+			GetEntPropString(entity, Prop_Data, "m_iName", targetname, sizeof(targetname));
+			
+			new i;
 
-		for(i = 0; i < arrayMax; i++)
-		{
-			if(entArray[i][ent_id] == entity)
-			{
-				recordExists=true;
-			}
-		}
-		
-		if(!recordExists)
-		{
 			for(i = 0; i < arrayMax; i++)
-			{ 
-				if(entArray[i][ent_id] == -1)
+			{
+				if(entArray[i][ent_id] == entity)
 				{
-					strcopy( temp, 32, entArray[i][ent_name] );
-					if(StrContains(targetname, temp, false) != -1)
+					recordExists=true;
+				}
+			}
+			
+			if(!recordExists)
+			{
+				for(i = 0; i < arrayMax; i++)
+				{ 
+					if(entArray[i][ent_id] == -1)
 					{
-						entArray[i][ent_id] = entity;
-						strcopy(entArray[i][ent_name], 32, targetname);
-						HookButton(i);
-						i = arrayMax;
+						strcopy( temp, 32, entArray[i][ent_name] );
+						if(StrContains(targetname, temp, false) != -1)
+						{
+							entArray[i][ent_id] = entity;
+							strcopy(entArray[i][ent_name], 32, targetname);
+							HookButton(i);
+							i = arrayMax;
+						}
 					}
 				}
 			}
@@ -278,7 +282,7 @@ public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast
 		iWeaponEnt = GetPlayerWeaponSlot(client, iSlot); 
 		for (new i = 0; i < arrayMax; i++)
 		{
-			if(entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1)
+			if(entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1 && IsPlayerAlive(client))
 			{
 				CPrintToChatAll("\x07FFFF00[entWatch] \x0700DA00%s \x07FFFF00has picked up \x07%s%s", playername, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 				entArray[ i ][ ent_owner ] = client;
@@ -287,6 +291,39 @@ public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast
 				iSlot=10;				
 			}	
 		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	
+	for (new i = 0; i < arrayMax; i++)
+	{
+		if(entArray[i][ent_owner] == client)
+		{
+			CPrintToChatAll("\x0784289E[entWatch] \x0700DA00%N \x0784289E has lost \x07%s%s \x0784289E through their demise!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			entArray[ i ][ ent_owner ] = -1;
+			strcopy(entArray[i][ent_ownername], 32, "");
+			i=arrayMax;		
+		}	
+	}
+}
+
+public OnClientDisconnect(client)
+{
+	for (new i = 0; i < arrayMax; i++)
+	{
+		if(entArray[i][ent_owner] == client)
+		{
+			CPrintToChatAll("\x07A67CB2[entWatch] \x0700DA00%N \x07A67CB2 disconnected while holding \x07%s%s!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			entArray[ i ][ ent_owner ] = -1;
+			strcopy(entArray[i][ent_ownername], 32, "");
+			i=arrayMax;		
+		}	
 	}
 }  
 
@@ -299,7 +336,7 @@ public Action:CS_OnCSWeaponDrop(client, weaponIndex)
 	GetClientName(client, playername, sizeof(playername))	
 	for (new i = 0; i < arrayMax; i++)
 	{
-		if(entArray[i][ent_owner] == client && entArray[i][ent_id] == weaponIndex)
+		if(entArray[i][ent_owner] == client && entArray[i][ent_id] == weaponIndex && IsPlayerAlive(client))
 		{
 			CPrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000has dropped \x07%s%s", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			playername="";
@@ -343,17 +380,17 @@ public Action:Command_dumpmap(client, args)
 	PrintToConsole(client, "\n[entWatch]\nIf the ID is -1 it can't find the ent\n");
 	for (new i = 0; i < arrayMax; i++)
 	{
-		PrintToChat(client, "\n");
-		PrintToChat(client, "%d | %s", i, entArray[i][ent_desc]);
-		PrintToChat(client, "%d | %s", i, entArray[i][ent_shortdesc]);
-		PrintToChat(client, "%d | %s", i, entArray[i][ent_color]);
-		PrintToChat(client, "%d | %s", i, entArray[i][ent_name]);
-		PrintToChat(client, "%d | %s", i, entArray[i][ent_type]);
-		PrintToChat(client, "%d | %s", i, entArray[i][ent_chat]);
-		PrintToChat(client, "%d | %s", i, entArray[i][ent_hud]);
-		PrintToChat(client, "%d | %s", i, entArray[i][ent_ownername]);
-		PrintToChat(client, "%d | %d", i, entArray[i][ent_id]);
-		PrintToChat(client, "%d | %d", i, entArray[i][ent_owner]);
+		CPrintToChatAll("\n");
+		CPrintToChatAll("%d | %s", i, entArray[i][ent_desc]);
+		CPrintToChatAll("%d | %s", i, entArray[i][ent_shortdesc]);
+		CPrintToChatAll("%d | %s", i, entArray[i][ent_color]);
+		CPrintToChatAll("%d | %s", i, entArray[i][ent_name]);
+		CPrintToChatAll("%d | %s", i, entArray[i][ent_type]);
+		CPrintToChatAll("%d | %s", i, entArray[i][ent_chat]);
+		CPrintToChatAll("%d | %s", i, entArray[i][ent_hud]);
+		CPrintToChatAll("%d | %s", i, entArray[i][ent_ownername]);
+		CPrintToChatAll("%d | %d", i, entArray[i][ent_id]);
+		CPrintToChatAll("%d | %d", i, entArray[i][ent_owner]);
 	}
 }
 
