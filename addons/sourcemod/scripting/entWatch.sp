@@ -1,12 +1,10 @@
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
 
 #include <smlib>
 #include <clientprefs>
+#include <morecolors>
 
 enum entities
 {
@@ -28,13 +26,16 @@ enum entities
 	ent_canuse
 } 
 
-// Now we need a variable that holds the player info
 new entArray[ 32 ][ entities ];
 new arrayMax = 0;
 
 new bool:configLoaded;
 new Handle:hudCookie;
 
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 public Plugin:myinfo =
 {
 	name = "entWatch",
@@ -43,6 +44,7 @@ public Plugin:myinfo =
 	version = "1.0",
 	url = "https://github.com/Prometheum/entWatch"
 };
+
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -60,8 +62,11 @@ public OnPluginStart()
 	CreateTimer(6.0, Timer_DisplayHud, _, TIMER_REPEAT);	
 }
 
+
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose:	This is where the plugin starts its actions for each map,
+//			We basically narrow down the checks in the first step to
+//			only cover entities that are weapon_. (reduces a big of lag)
 //-----------------------------------------------------------------------------
 public OnEntityCreated(entity, const String:classname[])
 {
@@ -72,7 +77,8 @@ public OnEntityCreated(entity, const String:classname[])
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose:	Here we check if classname of the entity partially,
+//			partially matches the one in the config.
 //-----------------------------------------------------------------------------
 public Action:OnEntityTouch(entity, Client)
 {
@@ -114,6 +120,9 @@ public Action:OnEntityTouch(entity, Client)
 	}
 }
 
+//-----------------------------------------------------------------------------
+// Purpose: Funds the button that parents the weapon and hooks it
+//-----------------------------------------------------------------------------
 public HookButton(i)
 {
 	decl String:tempA[32];
@@ -137,7 +146,7 @@ public HookButton(i)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose: Hook for when buttons are used
 //-----------------------------------------------------------------------------
 public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 {
@@ -145,7 +154,7 @@ public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 	{
 		if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_uses] < entArray[i][ent_maxuses])
 		{
-			PrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
+			CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
 			entArray[i][ent_uses]++;
 			entArray[i][ent_canuse]=0;
 			CreateTimer(entArray[i][ent_cooldown], Timer_Cooldown, i);
@@ -153,9 +162,7 @@ public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 	}
 }  
 
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
+
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -177,8 +184,8 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	
 	configLoaded = false;
 	
-	PrintToChatAll("\x073600FF[entWatch]\x072570A5 Plugin by \x073600FFPrometheum\x072570A5 - Download @ \x073600FFhttps://github.com/Prometheum/entWatch");
-	PrintToChatAll("\x073600FF[entWatch]\x0701A8FF Type !dontannoyme to toggle HUD");	
+	CPrintToChatAll("\x073600FF[entWatch]\x072570A5 Plugin by \x073600FFPrometheum\x072570A5 - Download @ \x073600FFhttps://github.com/Prometheum/entWatch");
+	CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF Type !hud to toggle HUD");	
 	
 	GetCurrentMap(buff_mapname, sizeof(buff_mapname));
 	
@@ -259,7 +266,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose: 
 //-----------------------------------------------------------------------------
 public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -276,7 +283,7 @@ public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast
 		{
 			if(entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1)
 			{
-				PrintToChatAll("\x07FFFF00[entWatch] \x0700DA00%s \x07FFFF00has picked up \x07%s%s", playername, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+				CPrintToChatAll("\x07FFFF00[entWatch] \x0700DA00%s \x07FFFF00has picked up \x07%s%s", playername, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 				entArray[ i ][ ent_owner ] = client;
 				strcopy(entArray[i][ent_ownername], 32, playername);
 				i=arrayMax;
@@ -297,7 +304,7 @@ public Action:CS_OnCSWeaponDrop(client, weaponIndex)
 	{
 		if(entArray[i][ent_owner] == client && entArray[i][ent_id] == weaponIndex)
 		{
-			PrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000has dropped \x07%s%s", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			CPrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000has dropped \x07%s%s", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			playername="";
 			strcopy(entArray[i][ent_ownername], 32, playername);
 			entArray[ i ][ ent_owner ] = -1;
@@ -371,7 +378,7 @@ public Action:Command_dontannoyme(client, args)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose: Cooldown Timer
 //-----------------------------------------------------------------------------
 public Action:Timer_Cooldown(Handle:timer, any:index)
 {
@@ -379,7 +386,7 @@ public Action:Timer_Cooldown(Handle:timer, any:index)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:
+// Purpose: Prints hud text
 //-----------------------------------------------------------------------------
 public Action:Timer_DisplayHud(Handle:timer)
 {

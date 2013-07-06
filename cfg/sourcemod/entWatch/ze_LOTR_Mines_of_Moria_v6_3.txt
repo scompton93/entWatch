@@ -1,0 +1,42 @@
+"entities"
+{
+        "0"
+        {
+		"desc"			"The Ring"
+		"short_desc"		"Ring"
+		"color"			"ffdd21"
+		"name"			"anillo"
+		"type"			"weapon_deagle"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"90.0"
+		"maxuses"		"0"
+        }
+        "1"
+        {
+		"desc"			"Gandalf's Staff"
+		"short_desc"		"Gandalf"
+		"color"			"ffffff"
+		"name"			"baston"
+		"type"			"weapon_deagle"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"60.0"
+		"maxuses"		"9"
+        }
+        "2"
+        {
+		"desc"			"Saruman's Staff"
+		"short_desc"		"Saruman"
+		"color"			"222222"
+		"name"			"baston2"
+		"type"			"weapon_deagle"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"50.0"
+		"maxuses"		"9"
+        }
+}

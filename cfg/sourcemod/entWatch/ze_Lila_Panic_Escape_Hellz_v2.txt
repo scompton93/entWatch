@@ -1,0 +1,42 @@
+"entities"
+{
+        "0"
+        {
+		"desc"			"Fire Barrel"
+		"short_desc"		"Fire"
+		"color"			"bb0000"
+		"name"			"barrel_gun"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"50.0"
+		"maxuses"		"20"
+        }
+        "1"
+        {
+		"desc"			"Freeze Bottle"
+		"short_desc"		"Freeze"
+		"color"			"21fffc"
+		"name"			"freeze_gun"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"50.0"
+		"maxuses"		"20"
+        }
+        "2"
+        {
+		"desc"			"Laser Wall"
+		"short_desc"		"Laser"
+		"color"			"120061"
+		"name"			"laser_gun"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"60.0"
+		"maxuses"		"20"
+        }
+}

@@ -1,0 +1,55 @@
+"entities"
+{
+        "0"
+        {
+		"desc"			"Push Gun"
+		"short_desc"		"Push"
+		"color"			"00d8d5"
+		"name"			"PushGunElites"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"66.0"
+		"maxuses"		"9"
+        }
+        "1"
+        {
+		"desc"			"Ammo Box"
+		"short_desc"		"Ammo"
+		"color"			"ad4100"
+		"name"			"AmmoElite"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"90.0"
+		"maxuses"		"9"
+        }
+        "2"
+        {
+		"desc"			"Laser Wall"
+		"short_desc"		"Wall"
+		"color"			"120061"
+		"name"			"LaserGun"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"60.0"
+		"maxuses"		"9"
+        }
+        "3"
+        {
+		"desc"			"Freezegun"
+		"short_desc"		"Freeze"
+		"color"			"21fffc"
+		"name"			"CoolrGun"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"75.0"
+		"maxuses"		"9"
+        }
+}
