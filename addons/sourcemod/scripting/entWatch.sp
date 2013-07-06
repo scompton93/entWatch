@@ -1,3 +1,6 @@
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -26,16 +29,13 @@ enum entities
 	ent_canuse
 } 
 
+// Now we need a variable that holds the player info
 new entArray[ 32 ][ entities ];
 new arrayMax = 0;
 
 new bool:configLoaded;
 new Handle:hudCookie;
 
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
 public Plugin:myinfo =
 {
 	name = "entWatch",
@@ -44,7 +44,6 @@ public Plugin:myinfo =
 	version = "1.0",
 	url = "https://github.com/Prometheum/entWatch"
 };
-
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -62,11 +61,8 @@ public OnPluginStart()
 	CreateTimer(6.0, Timer_DisplayHud, _, TIMER_REPEAT);	
 }
 
-
 //-----------------------------------------------------------------------------
-// Purpose:	This is where the plugin starts its actions for each map,
-//			We basically narrow down the checks in the first step to
-//			only cover entities that are weapon_. (reduces a big of lag)
+// Purpose:
 //-----------------------------------------------------------------------------
 public OnEntityCreated(entity, const String:classname[])
 {
@@ -77,8 +73,7 @@ public OnEntityCreated(entity, const String:classname[])
 }
 
 //-----------------------------------------------------------------------------
-// Purpose:	Here we check if classname of the entity partially,
-//			partially matches the one in the config.
+// Purpose:
 //-----------------------------------------------------------------------------
 public Action:OnEntityTouch(entity, Client)
 {
@@ -121,7 +116,7 @@ public Action:OnEntityTouch(entity, Client)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Funds the button that parents the weapon and hooks it
+// Purpose:
 //-----------------------------------------------------------------------------
 public HookButton(i)
 {
@@ -146,7 +141,7 @@ public HookButton(i)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Hook for when buttons are used
+// Purpose:
 //-----------------------------------------------------------------------------
 public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 {
@@ -161,7 +156,6 @@ public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 		}
 	}
 }  
-
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -183,9 +177,6 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	decl String:buff_maxuses[32];
 	
 	configLoaded = false;
-	
-	CPrintToChatAll("\x073600FF[entWatch]\x072570A5 Plugin by \x073600FFPrometheum\x072570A5 - Download @ \x073600FFhttps://github.com/Prometheum/entWatch");
-	CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF Type !hud to toggle HUD");	
 	
 	GetCurrentMap(buff_mapname, sizeof(buff_mapname));
 	
@@ -263,10 +254,16 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 		}
 	}
 	CloseHandle(kv);
+	
+	if(configLoaded)
+	{
+		CPrintToChatAll("\x073600FF[entWatch]\x072570A5 Plugin by \x073600FFPrometheum\x072570A5 - Download @ \x073600FFhttps://github.com/Prometheum/entWatch");
+		CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF Type !hud to toggle HUD");
+	}
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
+// Purpose:
 //-----------------------------------------------------------------------------
 public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -346,17 +343,17 @@ public Action:Command_dumpmap(client, args)
 	PrintToConsole(client, "\n[entWatch]\nIf the ID is -1 it can't find the ent\n");
 	for (new i = 0; i < arrayMax; i++)
 	{
-		PrintToChatAll("\n");
-		PrintToChatAll("%d | %s", i, entArray[i][ent_desc]);
-		PrintToChatAll("%d | %s", i, entArray[i][ent_shortdesc]);
-		PrintToChatAll("%d | %s", i, entArray[i][ent_color]);
-		PrintToChatAll("%d | %s", i, entArray[i][ent_name]);
-		PrintToChatAll("%d | %s", i, entArray[i][ent_type]);
-		PrintToChatAll("%d | %s", i, entArray[i][ent_chat]);
-		PrintToChatAll("%d | %s", i, entArray[i][ent_hud]);
-		PrintToChatAll("%d | %s", i, entArray[i][ent_ownername]);
-		PrintToChatAll("%d | %d", i, entArray[i][ent_id]);
-		PrintToChatAll("%d | %d", i, entArray[i][ent_owner]);
+		PrintToChat(client, "\n");
+		PrintToChat(client, "%d | %s", i, entArray[i][ent_desc]);
+		PrintToChat(client, "%d | %s", i, entArray[i][ent_shortdesc]);
+		PrintToChat(client, "%d | %s", i, entArray[i][ent_color]);
+		PrintToChat(client, "%d | %s", i, entArray[i][ent_name]);
+		PrintToChat(client, "%d | %s", i, entArray[i][ent_type]);
+		PrintToChat(client, "%d | %s", i, entArray[i][ent_chat]);
+		PrintToChat(client, "%d | %s", i, entArray[i][ent_hud]);
+		PrintToChat(client, "%d | %s", i, entArray[i][ent_ownername]);
+		PrintToChat(client, "%d | %d", i, entArray[i][ent_id]);
+		PrintToChat(client, "%d | %d", i, entArray[i][ent_owner]);
 	}
 }
 
@@ -378,7 +375,7 @@ public Action:Command_dontannoyme(client, args)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Cooldown Timer
+// Purpose:
 //-----------------------------------------------------------------------------
 public Action:Timer_Cooldown(Handle:timer, any:index)
 {
@@ -386,7 +383,7 @@ public Action:Timer_Cooldown(Handle:timer, any:index)
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Prints hud text
+// Purpose:
 //-----------------------------------------------------------------------------
 public Action:Timer_DisplayHud(Handle:timer)
 {
