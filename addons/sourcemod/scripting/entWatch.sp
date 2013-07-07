@@ -16,6 +16,7 @@ enum entities
 	String:ent_color[32],
 	String:ent_name[32],
 	bool:ent_exactname[32],
+	bool:ent_singleactivator[32],
 	String:ent_type[32],
 	String:ent_buttontype[32],
 	String:ent_chat[32],
@@ -162,13 +163,26 @@ public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 {
 	for(new i = 0; i < arrayMax; i++)
 	{
-		if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_uses] < entArray[i][ent_maxuses])
+		if(entArray[i][ent_singleactivator] == true)
 		{
-			CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
-			entArray[i][ent_uses]++;
-			entArray[i][ent_canuse]=0;
-			CreateTimer(entArray[i][ent_cooldown], Timer_Cooldown, i);
+			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_owner] == activator && entArray[i][ent_uses] < entArray[i][ent_maxuses])
+			{
+				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
+				entArray[i][ent_uses]++;
+				entArray[i][ent_canuse]=0;
+				CreateTimer(entArray[i][ent_cooldown], Timer_Cooldown, i);
+			}			
 		}
+		else if(entArray[i][ent_singleactivator] == false)
+		{
+			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_uses] < entArray[i][ent_maxuses])
+			{
+				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
+				entArray[i][ent_uses]++;
+				entArray[i][ent_canuse]=0;
+				CreateTimer(entArray[i][ent_cooldown], Timer_Cooldown, i);
+			}			
+		}		
 	}
 }  
 
@@ -185,6 +199,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	decl String:buff_color[32];
 	decl String:buff_name[32];
 	decl String:buff_exactname[32];
+	decl String:buff_singleactivator[32];
 	decl String:buff_type[32];
 	decl String:buff_buttontype[32];
 	decl String:buff_chat[32];
@@ -217,6 +232,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 		entArray[i][ent_cooldown] = 2.0;
 		entArray[i][ent_canuse] = 1;
 		entArray[i][ent_exactname] = false;
+		entArray[i][ent_singleactivator] = false;
 	}	
 	
 	strcopy(buff_temp, sizeof(buff_temp), "cfg/sourcemod/entWatch/");
@@ -245,6 +261,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 			KvGetString(kv, "color", buff_color, sizeof(buff_color));
 			KvGetString(kv, "name", buff_name, sizeof(buff_name));
 			KvGetString(kv, "exactname", buff_exactname, sizeof(buff_exactname));
+			KvGetString(kv, "singleactivator", buff_singleactivator, sizeof(buff_singleactivator));
 			KvGetString(kv, "type", buff_type, sizeof(buff_type));
 			KvGetString(kv, "button_type", buff_buttontype, sizeof(buff_buttontype));
 			KvGetString(kv, "chat", buff_chat, sizeof(buff_chat));
@@ -264,7 +281,12 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 			if(StrEqual(buff_exactname, "false"))
 				entArray[i][ent_exactname] = false;
 			else
-				entArray[i][ent_exactname] = true;			
+				entArray[i][ent_exactname] = true;	
+				
+			if(StrEqual(buff_singleactivator, "true"))
+				entArray[i][ent_singleactivator] = true;
+			else
+				entArray[i][ent_singleactivator] = false;			
 			
 			entArray[i][ent_maxuses] = StringToInt(buff_maxuses);
 			entArray[i][ent_cooldown] = StringToFloat(buff_cooldown);
@@ -337,7 +359,7 @@ public OnClientDisconnect(client)
 	{
 		if(entArray[i][ent_owner] == client)
 		{
-			CPrintToChatAll("\x07A67CB2[entWatch] \x0700DA00%N \x07A67CB2 disconnected while holding \x07%s%s!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			CPrintToChatAll("\x07A67CB2[entWatch] \x0700DA00%N \x07A67CB2disconnected while holding \x07%s%s!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			entArray[ i ][ ent_owner ] = -1;
 			strcopy(entArray[i][ent_ownername], 32, "");
 			i=arrayMax;		
