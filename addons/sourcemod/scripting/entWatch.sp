@@ -5,7 +5,6 @@
 #include <sdktools>
 #include <sdkhooks>
 
-#include <smlib>
 #include <clientprefs>
 #include <morecolors>
 
@@ -15,12 +14,13 @@ enum entities
 	String:ent_shortdesc[32],
 	String:ent_color[32],
 	String:ent_name[32],
+	String:ent_originalname[32],
 	bool:ent_exactname[32],
 	bool:ent_singleactivator[32],
 	String:ent_type[32],
 	String:ent_buttontype[32],
-	String:ent_chat[32],
-	String:ent_hud[32],
+	bool:ent_chat[32],
+	bool:ent_hud[32],
 	String:ent_ownername[32],
 	ent_buttonid,
 	ent_owner,
@@ -69,9 +69,12 @@ public OnPluginStart()
 //-----------------------------------------------------------------------------
 public OnEntityCreated(entity, const String:classname[])
 {
-	if(StrContains(classname, "weapon", false) != -1)
+	if(configLoaded)
 	{
-		SDKHook(entity, SDKHook_StartTouch, OnEntityTouch);
+		if(StrContains(classname, "weapon", false) != -1)
+		{
+			SDKHook(entity, SDKHook_StartTouch, OnEntityTouch);		
+		}
 	}
 }
 
@@ -80,13 +83,13 @@ public OnEntityCreated(entity, const String:classname[])
 //-----------------------------------------------------------------------------
 public Action:OnEntityTouch(entity, Client)
 {
-	if(configLoaded && Entity_IsPlayer(Client) && IsPlayerAlive(Client))
+	if(Entity_IsPlayer(Client))
 	{
 		decl String:targetname[32];
 		decl String:temp[32];
 		new bool:recordExists=false;
 		
-		GetEntPropString(entity, Prop_Data, "m_iName", targetname, sizeof(targetname));
+		Entity_GetTargetName(entity, targetname, sizeof(targetname));
 		
 		new i;
 
@@ -115,7 +118,7 @@ public Action:OnEntityTouch(entity, Client)
 							i = arrayMax;
 						}
 					}
-					if(entArray[i][ent_exactname])
+					else
 					{
 						if(strcmp(targetname, temp, false) == 0)
 						{
@@ -134,22 +137,22 @@ public Action:OnEntityTouch(entity, Client)
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-public HookButton(i)
+public HookButton(rootEntity)
 {
 	decl String:tempA[32];
 	decl String:tempB[32];
-	for(new x=0; x < GetEntityCount(); x++)
+	for(new i=0; i < GetEntityCount(); i++)
 	{
-		if(IsValidEdict(x))
+		if(IsValidEdict(i))
 		{
-			GetEntityClassname(x, tempA, sizeof(tempA));
-			if(StrEqual(tempA, entArray[i][ent_buttontype]))
+			GetEntityClassname(i, tempA, sizeof(tempA));
+			if(StrEqual(tempA, entArray[rootEntity][ent_buttontype]))
 			{
-				Entity_GetParentName(x, tempB, sizeof(tempB));
-				if(StrEqual(tempB, entArray[i][ent_name]))
+				Entity_GetParentName(i, tempB, sizeof(tempB));
+				if(StrEqual(tempB, entArray[rootEntity][ent_name]))
 				{
-					entArray[i][ent_buttonid] = x;
-					SDKHook(x, SDKHook_Use, OnEntityUse);								
+					entArray[rootEntity][ent_buttonid] = i;
+					SDKHook(i, SDKHook_Use, OnEntityUse);								
 				}
 			}
 		}
@@ -186,10 +189,7 @@ public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 	}
 }  
 
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+public OnMapStart()
 {
 	decl String:buff_mapname[64];
 	decl String:buff_temp[64];
@@ -221,12 +221,12 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 		strcopy( entArray[ i ][ ent_name ], 32, "null" );
 		strcopy( entArray[ i ][ ent_type ], 32, "null" );
 		strcopy( entArray[ i ][ ent_buttontype ], 32, "null" );
-		strcopy( entArray[ i ][ ent_chat ], 32, "null" );
-		strcopy( entArray[ i ][ ent_hud ], 32, "null" );
+		entArray[ i ][ ent_chat ] = false;
+		entArray[ i ][ ent_hud ] = false;
 		strcopy( entArray[ i ][ ent_ownername ], 32, "" );
 		entArray[i][ent_buttonid] = -1;
 		entArray[i][ent_id] = -1;
-		entArray[i][ent_owner] = 0;
+		entArray[i][ent_owner] = -1;
 		entArray[i][ent_maxuses] = 0;
 		entArray[i][ent_uses] = 0;
 		entArray[i][ent_cooldown] = 2.0;
@@ -273,11 +273,19 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 			strcopy(entArray[i][ent_shortdesc], 32, buff_shortdesc);
 			strcopy(entArray[i][ent_color], 32, buff_color);
 			strcopy(entArray[i][ent_name], 32, buff_name);
+			strcopy(entArray[i][ent_originalname], 32, buff_name);
 			strcopy(entArray[i][ent_type], 32, buff_type);
 			strcopy(entArray[i][ent_buttontype], 32, buff_buttontype);
-			strcopy(entArray[i][ent_chat], 32, buff_chat);
-			strcopy(entArray[i][ent_hud], 32, buff_hud);
 			
+			if(StrEqual(buff_chat, "false"))
+				entArray[i][ent_chat] = false;
+			else
+				entArray[i][ent_chat] = true;	
+			if(StrEqual(buff_hud, "false"))
+				entArray[i][ent_hud] = false;
+			else
+				entArray[i][ent_hud] = true;	
+				
 			if(StrEqual(buff_exactname, "false"))
 				entArray[i][ent_exactname] = false;
 			else
@@ -299,11 +307,28 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 		}
 	}
 	CloseHandle(kv);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	for (new i = 0; i < arrayMax; i++)
+	{
+		strcopy( entArray[ i ][ ent_name ], 32, entArray[ i ][ent_originalname] );
+		strcopy( entArray[ i ][ ent_ownername ], 32, "" );
+		entArray[i][ent_buttonid] = -1;
+		entArray[i][ent_id] = -1;
+		entArray[i][ent_owner] = -1;
+		entArray[i][ent_uses] = 0;
+		entArray[i][ent_canuse] = 1;
+	}
 	
 	if(configLoaded)
 	{
 		CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF Type !hud to toggle HUD - Plugin by \x073600FFPrometheum");
-	}
+	}	
 }
 
 //-----------------------------------------------------------------------------
@@ -317,18 +342,18 @@ public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast
 	GetClientName(client, playername, sizeof(playername))
 	
 	new iWeaponEnt = -1;
-	for(new iSlot=0; iSlot<10; iSlot++) // someone said that hl2 have 10 slots
+	for(new iSlot=0; iSlot<5; iSlot++)
 	{
 		iWeaponEnt = GetPlayerWeaponSlot(client, iSlot); 
 		for (new i = 0; i < arrayMax; i++)
 		{
-			if(entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1 && IsPlayerAlive(client) && entArray[i][ent_owner] != client)
+			if(entArray[i][ent_chat] && entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1 && IsPlayerAlive(client) && entArray[i][ent_owner] != client)
 			{
 				CPrintToChatAll("\x07FFFF00[entWatch] \x0700DA00%s \x07FFFF00has picked up \x07%s%s", playername, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 				entArray[ i ][ ent_owner ] = client;
 				strcopy(entArray[i][ent_ownername], 32, playername);
 				i=arrayMax;
-				iSlot=10;				
+				iSlot=5;				
 			}	
 		}
 	}
@@ -343,9 +368,9 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 	
 	for (new i = 0; i < arrayMax; i++)
 	{
-		if(entArray[i][ent_owner] == client)
+		if(entArray[i][ent_chat] && entArray[i][ent_owner] == client)
 		{
-			CPrintToChatAll("\x0784289E[entWatch] \x0700DA00%N \x0784289E has lost \x07%s%s \x0784289Ethrough their demise!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			CPrintToChatAll("\x0784289E[entWatch] \x0700DA00%N \x0784289Ehas lost \x07%s%s \x0784289Ethrough their demise!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			entArray[ i ][ ent_owner ] = -1;
 			strcopy(entArray[i][ent_ownername], 32, "");
 			i=arrayMax;		
@@ -357,7 +382,7 @@ public OnClientDisconnect(client)
 {
 	for (new i = 0; i < arrayMax; i++)
 	{
-		if(entArray[i][ent_owner] == client)
+		if(entArray[i][ent_chat] && entArray[i][ent_owner] == client)
 		{
 			CPrintToChatAll("\x07A67CB2[entWatch] \x0700DA00%N \x07A67CB2disconnected while holding \x07%s%s!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			entArray[ i ][ ent_owner ] = -1;
@@ -376,7 +401,7 @@ public Action:CS_OnCSWeaponDrop(client, weaponIndex)
 	GetClientName(client, playername, sizeof(playername))	
 	for (new i = 0; i < arrayMax; i++)
 	{
-		if(entArray[i][ent_owner] == client && entArray[i][ent_id] == weaponIndex && IsPlayerAlive(client))
+		if(entArray[i][ent_owner] == client && entArray[i][ent_chat] && entArray[i][ent_id] == weaponIndex && IsPlayerAlive(client))
 		{
 			CPrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000has dropped \x07%s%s", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			playername="";
@@ -426,8 +451,6 @@ public Action:Command_dumpmap(client, args)
 		CPrintToChatAll("%d | %s", i, entArray[i][ent_color]);
 		CPrintToChatAll("%d | %s", i, entArray[i][ent_name]);
 		CPrintToChatAll("%d | %s", i, entArray[i][ent_type]);
-		CPrintToChatAll("%d | %s", i, entArray[i][ent_chat]);
-		CPrintToChatAll("%d | %s", i, entArray[i][ent_hud]);
 		CPrintToChatAll("%d | %s", i, entArray[i][ent_ownername]);
 		CPrintToChatAll("%d | %d", i, entArray[i][ent_id]);
 		CPrintToChatAll("%d | %d", i, entArray[i][ent_owner]);
@@ -475,27 +498,23 @@ public Action:Timer_DisplayHud(Handle:timer)
 			{
 				szText[0] = '\0';
 				GetClientCookie(i, hudCookie, buffer, sizeof(buffer));
-				if(StrEqual(buffer, "0"))
+				if(StrEqual(buffer, "0") && IsClientConnected(i))
 				{
-					if(IsClientConnected(i))
+					for (new x = 0; x < 16; x++)
 					{
-						for (new x = 0; x < 16; x++)
+						if(entArray[x][ent_hud] && !StrEqual(entArray[x][ent_ownername], "") )
 						{
-							if(StrEqual(entArray[x][ent_hud], "true") && !StrEqual(entArray[x][ent_ownername], "") )
-							{
-								StrCat(szText, sizeof(szText), entArray[x][ent_shortdesc]);
-								StrCat(szText, sizeof(szText), ": ");
-								StrCat(szText, sizeof(szText), entArray[x][ent_ownername]);	
-								
-								StrCat(szText, sizeof(szText), "\n");						
-							}
+							StrCat(szText, sizeof(szText), entArray[x][ent_shortdesc]);
+							StrCat(szText, sizeof(szText), ": ");
+							StrCat(szText, sizeof(szText), entArray[x][ent_ownername]);	
+							
+							StrCat(szText, sizeof(szText), "\n");						
 						}
-			
-						new Handle:hBuffer = StartMessageOne("KeyHintText", i);
-						BfWriteByte(hBuffer, 1);
-						BfWriteString(hBuffer, szText);
-						EndMessage();  
 					}
+					new Handle:hBuffer = StartMessageOne("KeyHintText", i);
+					BfWriteByte(hBuffer, 1);
+					BfWriteString(hBuffer, szText);
+					EndMessage();  
 				}
 				else if(StrEqual(buffer, "1"))
 				{
@@ -508,4 +527,27 @@ public Action:Timer_DisplayHud(Handle:timer)
 			}
 		}
 	}
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: SMLib
+//-----------------------------------------------------------------------------
+stock bool:Entity_IsPlayer(entity)
+{
+	if (entity < 1 || entity > MaxClients) {
+		return false;
+	}
+	
+	return true;
+}
+
+stock Entity_GetTargetName(entity, String:buffer[], size)
+{
+	return GetEntPropString(entity, Prop_Data,  "m_iName", buffer, size);
+}
+
+stock Entity_GetParentName(entity, String:buffer[], size)
+{
+	return GetEntPropString(entity, Prop_Data, "m_iParent", buffer, size);
 }

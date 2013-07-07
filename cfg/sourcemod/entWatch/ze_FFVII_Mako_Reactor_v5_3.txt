@@ -117,7 +117,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"cooldown"		"55.0"
+		"cooldown"		"50.0"
 		"maxuses"		"20"			      
         }
 }

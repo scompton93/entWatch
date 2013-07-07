@@ -1,7 +1,7 @@
 "entities"
 {
-        "0"
-        {
+	"0"
+	{
 		"desc"			"Vent Lever"
 		"short_desc"		"Lever"
 		"color"			"ad4100"
@@ -14,9 +14,9 @@
 		"hud"			"true"
 		"cooldown"		"40.0"
 		"maxuses"		"0"
-        }
-        "1"
-        {
+	}
+	"1"
+	{
 		"desc"			"Ammo Box"
 		"short_desc"		"Ammo"
 		"color"			"ad4100"
@@ -29,9 +29,9 @@
 		"hud"			"true"
 		"cooldown"		"40.0"
 		"maxuses"		"1"
-        }
-        "3"
-        {
+	}
+	"3"
+	{
 		"desc"			"Bomb Placer"
 		"short_desc"		"Bombs"
 		"color"			"2f2f2f"
@@ -44,9 +44,9 @@
 		"hud"			"true"
 		"cooldown"		"1.0"
 		"maxuses"		"8"
-        }
-        "4"
-        {
+	}
+	"4"
+	{
 		"desc"			"Push Gun"
 		"short_desc"		"Push"
 		"color"			"00a3bb"
@@ -59,9 +59,9 @@
 		"hud"			"true"
 		"cooldown"		"50.0"
 		"maxuses"		"9"
-        }
-        "5"
-        {
+	}
+	"5"
+	{
 		"desc"			"Slow Gun"
 		"short_desc"		"Slow"
 		"color"			"09c300"
@@ -74,9 +74,9 @@
 		"hud"			"true"
 		"cooldown"		"60.0"
 		"maxuses"		"9"
-        }
-        "6"
-        {
+	}
+	"6"
+	{
 		"desc"			"Flamethrower"
 		"short_desc"		"Flame"
 		"color"			"bb0000"
@@ -90,8 +90,8 @@
 		"cooldown"		"60.0"
 		"maxuses"		"0"
 	}
-        "7"
-        {
+	"7"
+	{
 		"desc"			"Grenade Maker"
 		"short_desc"		"Nades"
 		"color"			"bb8000"
@@ -105,8 +105,8 @@
 		"cooldown"		"60.0"
 		"maxuses"		"0"
 	}
-        "8"
-        {
+	"8"
+	{
 		"desc"			"Freeze Gun"
 		"short_desc"		"Freeze"
 		"color"			"00a3bb"
@@ -120,8 +120,8 @@
 		"cooldown"		"60.0"
 		"maxuses"		"0"
 	}
-        "9"
-        {
+	"9"
+	{
 		"desc"			"Confusion Gun"
 		"short_desc"		"Confuse"
 		"color"			"09c300"
@@ -135,8 +135,8 @@
 		"cooldown"		"60.0"
 		"maxuses"		"0"
 	}
-        "10"
-        {
+	"10"
+	{
 		"desc"			"Mini Nuke"
 		"short_desc"		"Nuke"
 		"color"			"eaff02"
@@ -150,8 +150,8 @@
 		"cooldown"		"60.0"
 		"maxuses"		"1"
 	}
-        "11"
-        {
+	"11"
+	{
 		"desc"			"Heal"
 		"short_desc"		"Heal"
 		"color"			"bc00a4"
@@ -165,8 +165,8 @@
 		"cooldown"		"60.0"
 		"maxuses"		"1"
 	}
-        "12"
-        {
+	"12"
+	{
 		"desc"			"Heal"
 		"short_desc"		"Heal"
 		"color"			"bc00a4"
