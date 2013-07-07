@@ -4,6 +4,7 @@ A Sourcemod plugin capable of watching custom map entities and displaying chat/h
 ![image](http://i.imgur.com/sn6X4ze.png)
 ![image](http://i.imgur.com/WNaYvnR.png)
 ![image](http://i.imgur.com/2bBKSRj.png)
+![image](http://i.imgur.com/eB0zMxi.png)
 
 ## Features
 

@@ -15,7 +15,7 @@ enum entities
 	String:ent_shortdesc[32],
 	String:ent_color[32],
 	String:ent_name[32],
-	String:ent_exactname[32],
+	bool:ent_exactname[32],
 	String:ent_type[32],
 	String:ent_buttontype[32],
 	String:ent_chat[32],
@@ -104,17 +104,7 @@ public Action:OnEntityTouch(entity, Client)
 				if(entArray[i][ent_id] == -1)
 				{
 					strcopy( temp, 32, entArray[i][ent_name]);
-					if(StrContains(entArray[i][ent_exactname], "true"))
-					{
-						if(StrEqual(targetname, temp))
-						{
-							entArray[i][ent_id] = entity;
-							strcopy(entArray[i][ent_name], 32, targetname);
-							HookButton(i);
-							i = arrayMax;
-						}						
-					}
-					else
+					if(!entArray[i][ent_exactname])
 					{
 						if(StrContains(targetname, temp, false) != -1)
 						{
@@ -122,8 +112,18 @@ public Action:OnEntityTouch(entity, Client)
 							strcopy(entArray[i][ent_name], 32, targetname);
 							HookButton(i);
 							i = arrayMax;
-						}						
+						}
 					}
+					if(entArray[i][ent_exactname])
+					{
+						if(strcmp(targetname, temp, false) == 0)
+						{
+							entArray[i][ent_id] = entity;
+							strcopy(entArray[i][ent_name], 32, targetname);
+							HookButton(i);
+							i = arrayMax;
+						}
+					}					
 				}
 			}
 		}
@@ -204,7 +204,6 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 		strcopy( entArray[ i ][ ent_shortdesc ], 32, "" );
 		strcopy( entArray[ i ][ ent_color ], 32, "null" );
 		strcopy( entArray[ i ][ ent_name ], 32, "null" );
-		strcopy( entArray[ i ][ ent_exactname ], 32, "false" );
 		strcopy( entArray[ i ][ ent_type ], 32, "null" );
 		strcopy( entArray[ i ][ ent_buttontype ], 32, "null" );
 		strcopy( entArray[ i ][ ent_chat ], 32, "null" );
@@ -217,6 +216,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 		entArray[i][ent_uses] = 0;
 		entArray[i][ent_cooldown] = 2.0;
 		entArray[i][ent_canuse] = 1;
+		entArray[i][ent_exactname] = false;
 	}	
 	
 	strcopy(buff_temp, sizeof(buff_temp), "cfg/sourcemod/entWatch/");
@@ -256,11 +256,15 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 			strcopy(entArray[i][ent_shortdesc], 32, buff_shortdesc);
 			strcopy(entArray[i][ent_color], 32, buff_color);
 			strcopy(entArray[i][ent_name], 32, buff_name);
-			strcopy(entArray[i][ent_exactname], 32, buff_exactname);
 			strcopy(entArray[i][ent_type], 32, buff_type);
 			strcopy(entArray[i][ent_buttontype], 32, buff_buttontype);
 			strcopy(entArray[i][ent_chat], 32, buff_chat);
 			strcopy(entArray[i][ent_hud], 32, buff_hud);
+			
+			if(StrEqual(buff_exactname, "false"))
+				entArray[i][ent_exactname] = false;
+			else
+				entArray[i][ent_exactname] = true;			
 			
 			entArray[i][ent_maxuses] = StringToInt(buff_maxuses);
 			entArray[i][ent_cooldown] = StringToFloat(buff_cooldown);
