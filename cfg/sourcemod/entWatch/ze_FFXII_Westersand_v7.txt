@@ -108,7 +108,7 @@
         {
 		"desc"			"Earth Staff"
 		"short_desc"		"Earth"
-		"color"			"6C4210"
+		"color"			"7e4400"
 		"name"			"Staff_Earth_Pistol"
 		"type"			"weapon_elite"
 		"button_type"		"func_button"

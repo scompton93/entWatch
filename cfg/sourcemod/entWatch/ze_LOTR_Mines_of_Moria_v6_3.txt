@@ -19,6 +19,7 @@
 		"short_desc"		"Gandalf"
 		"color"			"ffffff"
 		"name"			"baston"
+		"exactname"		"true"
 		"type"			"weapon_deagle"
 		"button_type"		"func_button"
 		"chat"			"true"

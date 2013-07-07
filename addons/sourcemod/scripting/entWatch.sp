@@ -15,6 +15,7 @@ enum entities
 	String:ent_shortdesc[32],
 	String:ent_color[32],
 	String:ent_name[32],
+	String:ent_exactname[32],
 	String:ent_type[32],
 	String:ent_buttontype[32],
 	String:ent_chat[32],
@@ -78,40 +79,50 @@ public OnEntityCreated(entity, const String:classname[])
 //-----------------------------------------------------------------------------
 public Action:OnEntityTouch(entity, Client)
 {
-	if(configLoaded)
+	if(configLoaded && Entity_IsPlayer(Client) && IsPlayerAlive(Client))
 	{
-		if(IsPlayerAlive(Client))
-		{
-			decl String:targetname[32];
-			decl String:temp[32];
-			new bool:recordExists=false;
-			
-			GetEntPropString(entity, Prop_Data, "m_iName", targetname, sizeof(targetname));
-			
-			new i;
+		decl String:targetname[32];
+		decl String:temp[32];
+		new bool:recordExists=false;
+		
+		GetEntPropString(entity, Prop_Data, "m_iName", targetname, sizeof(targetname));
+		
+		new i;
 
-			for(i = 0; i < arrayMax; i++)
+		for(i = 0; i < arrayMax; i++)
+		{
+			if(entArray[i][ent_id] == entity)
 			{
-				if(entArray[i][ent_id] == entity)
-				{
-					recordExists=true;
-				}
+				recordExists=true;
 			}
-			
-			if(!recordExists)
-			{
-				for(i = 0; i < arrayMax; i++)
-				{ 
-					if(entArray[i][ent_id] == -1)
+		}
+		
+		if(!recordExists)
+		{
+			for(i = 0; i < arrayMax; i++)
+			{ 
+				if(entArray[i][ent_id] == -1)
+				{
+					strcopy( temp, 32, entArray[i][ent_name]);
+					if(StrContains(entArray[i][ent_exactname], "true"))
 					{
-						strcopy( temp, 32, entArray[i][ent_name] );
+						if(StrEqual(targetname, temp))
+						{
+							entArray[i][ent_id] = entity;
+							strcopy(entArray[i][ent_name], 32, targetname);
+							HookButton(i);
+							i = arrayMax;
+						}						
+					}
+					else
+					{
 						if(StrContains(targetname, temp, false) != -1)
 						{
 							entArray[i][ent_id] = entity;
 							strcopy(entArray[i][ent_name], 32, targetname);
 							HookButton(i);
 							i = arrayMax;
-						}
+						}						
 					}
 				}
 			}
@@ -173,6 +184,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	decl String:buff_shortdesc[32];
 	decl String:buff_color[32];
 	decl String:buff_name[32];
+	decl String:buff_exactname[32];
 	decl String:buff_type[32];
 	decl String:buff_buttontype[32];
 	decl String:buff_chat[32];
@@ -192,6 +204,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 		strcopy( entArray[ i ][ ent_shortdesc ], 32, "" );
 		strcopy( entArray[ i ][ ent_color ], 32, "null" );
 		strcopy( entArray[ i ][ ent_name ], 32, "null" );
+		strcopy( entArray[ i ][ ent_exactname ], 32, "false" );
 		strcopy( entArray[ i ][ ent_type ], 32, "null" );
 		strcopy( entArray[ i ][ ent_buttontype ], 32, "null" );
 		strcopy( entArray[ i ][ ent_chat ], 32, "null" );
@@ -231,6 +244,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 			KvGetString(kv, "short_desc", buff_shortdesc, sizeof(buff_shortdesc));
 			KvGetString(kv, "color", buff_color, sizeof(buff_color));
 			KvGetString(kv, "name", buff_name, sizeof(buff_name));
+			KvGetString(kv, "exactname", buff_exactname, sizeof(buff_exactname));
 			KvGetString(kv, "type", buff_type, sizeof(buff_type));
 			KvGetString(kv, "button_type", buff_buttontype, sizeof(buff_buttontype));
 			KvGetString(kv, "chat", buff_chat, sizeof(buff_chat));
@@ -242,6 +256,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 			strcopy(entArray[i][ent_shortdesc], 32, buff_shortdesc);
 			strcopy(entArray[i][ent_color], 32, buff_color);
 			strcopy(entArray[i][ent_name], 32, buff_name);
+			strcopy(entArray[i][ent_exactname], 32, buff_exactname);
 			strcopy(entArray[i][ent_type], 32, buff_type);
 			strcopy(entArray[i][ent_buttontype], 32, buff_buttontype);
 			strcopy(entArray[i][ent_chat], 32, buff_chat);
@@ -261,8 +276,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	
 	if(configLoaded)
 	{
-		CPrintToChatAll("\x073600FF[entWatch]\x072570A5 Plugin by \x073600FFPrometheum\x072570A5 - Download @ \x073600FFhttps://github.com/Prometheum/entWatch");
-		CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF Type !hud to toggle HUD");
+		CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF Type !hud to toggle HUD - Plugin by \x073600FFPrometheum");
 	}
 }
 
@@ -282,7 +296,7 @@ public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast
 		iWeaponEnt = GetPlayerWeaponSlot(client, iSlot); 
 		for (new i = 0; i < arrayMax; i++)
 		{
-			if(entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1 && IsPlayerAlive(client))
+			if(entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1 && IsPlayerAlive(client) && entArray[i][ent_owner] != client)
 			{
 				CPrintToChatAll("\x07FFFF00[entWatch] \x0700DA00%s \x07FFFF00has picked up \x07%s%s", playername, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 				entArray[ i ][ ent_owner ] = client;
@@ -305,7 +319,7 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 	{
 		if(entArray[i][ent_owner] == client)
 		{
-			CPrintToChatAll("\x0784289E[entWatch] \x0700DA00%N \x0784289E has lost \x07%s%s \x0784289E through their demise!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			CPrintToChatAll("\x0784289E[entWatch] \x0700DA00%N \x0784289E has lost \x07%s%s \x0784289Ethrough their demise!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			entArray[ i ][ ent_owner ] = -1;
 			strcopy(entArray[i][ent_ownername], 32, "");
 			i=arrayMax;		
