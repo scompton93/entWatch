@@ -39,6 +39,7 @@ new arrayMax = 0;
 
 new bool:configLoaded;
 new Handle:hudCookie;
+new Handle:global_cooldowns;
 
 public Plugin:myinfo =
 {
@@ -54,8 +55,10 @@ public Plugin:myinfo =
 //-----------------------------------------------------------------------------
 public OnPluginStart()
 {
-	new Handle:global_cooldowns = CreateConVar("entW_cooldowns", "1", "Turns cooldowns/off");
+	global_cooldowns = CreateConVar("entW_cooldowns", "1", "Turns cooldowns/off");
 
+	CreateConVar("sm_entW_version", "1.3", "Current version of entWatch", FCVAR_NOTIFY);
+	
 	RegConsoleCmd("entW_find", Command_FindEnts, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("entW_dumpmap", Command_dumpmap, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("hud", Command_dontannoyme);
@@ -511,22 +514,25 @@ public Action:Timer_DisplayHud(Handle:timer)
 						if(entArray[x][ent_hud] && !StrEqual(entArray[x][ent_ownername], "") )
 						{
 							StrCat(szText, sizeof(szText), entArray[x][ent_shortdesc]);
-							StrCat(szText, sizeof(szText), "[");
-							if(entArray[x][ent_hudcooldown] && entArray[x][ent_uses] < entArray[x][ent_maxuses])
+							if(GetConVarInt(global_cooldowns) == 1)
 							{
-								if(entArray[x][ent_cooldowncount] == 0)
-									StrCat(szText, sizeof(szText), "R");
+								StrCat(szText, sizeof(szText), "[");
+								if(entArray[x][ent_hudcooldown] && entArray[x][ent_uses] < entArray[x][ent_maxuses])
+								{
+									if(entArray[x][ent_cooldowncount] == 0)
+										StrCat(szText, sizeof(szText), "R");
+									else
+									{
+										IntToString(entArray[x][ent_cooldowncount], temp, sizeof(temp));
+										StrCat(szText, sizeof(szText), temp);
+									}
+								}
 								else
 								{
-									IntToString(entArray[x][ent_cooldowncount], temp, sizeof(temp));
-									StrCat(szText, sizeof(szText), temp);
+									StrCat(szText, sizeof(szText), "N/A");
 								}
-							}
-							else
-							{
-								StrCat(szText, sizeof(szText), "N/A");
-							}
-							StrCat(szText, sizeof(szText), "]");							
+								StrCat(szText, sizeof(szText), "]");	
+							}							
 							StrCat(szText, sizeof(szText), ": ");
 							StrCat(szText, sizeof(szText), entArray[x][ent_ownername]);
 							
