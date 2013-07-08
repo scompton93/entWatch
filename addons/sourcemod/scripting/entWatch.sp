@@ -411,7 +411,7 @@ public OnClientDisconnect(client)
 //-----------------------------------------------------------------------------
 public Action:CS_OnCSWeaponDrop(client, weaponIndex)
 {
-	if(Entity_IsPlayer(client))
+	if(IsClientConnected(client))
 	{
 		decl String:playername[32];
 		GetClientName(client, playername, sizeof(playername))	
