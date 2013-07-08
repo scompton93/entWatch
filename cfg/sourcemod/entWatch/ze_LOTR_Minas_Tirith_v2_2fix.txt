@@ -13,6 +13,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"50.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"
         }
         "1"
@@ -28,6 +29,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"50.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"
         }
         "2"
@@ -43,6 +45,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"50.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"
         }
         "3"
@@ -58,6 +61,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"50.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"
         }
         "4"
@@ -73,6 +77,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"50.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"
 	}
         "5"
@@ -88,6 +93,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"50.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"
 	}
         "6"
@@ -103,6 +109,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"50.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"
 	}
         "7"
@@ -118,6 +125,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"50.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"
 	}
 }

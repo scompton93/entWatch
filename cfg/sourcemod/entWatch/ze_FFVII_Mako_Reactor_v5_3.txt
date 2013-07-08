@@ -43,6 +43,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"55.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0"		
         }
         "3"

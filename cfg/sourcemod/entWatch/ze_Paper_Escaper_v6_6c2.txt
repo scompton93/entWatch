@@ -13,6 +13,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"55.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0" 
         }
         "1"
@@ -28,6 +29,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"55.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"1" 
         }
         "2"
@@ -58,6 +60,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"55.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"1" 
         }
         "4"
@@ -73,7 +76,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"75.0"
-		"maxuses"		"1" 
+		"maxuses"		"10" 
         }
         "5"
         {
@@ -88,6 +91,7 @@
 		"chat"			"true"
 		"hud"			"true"
 		"cooldown"		"55.0"
+		"cooldown_hud"	"false"
 		"maxuses"		"0" 
         }
 }
