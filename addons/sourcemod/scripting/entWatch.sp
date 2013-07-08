@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// Purpose: wtf
+// Purpose:
 //-----------------------------------------------------------------------------
 #include <sourcemod>
 #include <sdktools>
@@ -194,19 +194,6 @@ public OnMapStart()
 	decl String:buff_mapname[64];
 	decl String:buff_temp[64];
 	
-	decl String:buff_desc[32];
-	decl String:buff_shortdesc[32];
-	decl String:buff_color[32];
-	decl String:buff_name[32];
-	decl String:buff_exactname[32];
-	decl String:buff_singleactivator[32];
-	decl String:buff_type[32];
-	decl String:buff_buttontype[32];
-	decl String:buff_chat[32];
-	decl String:buff_hud[32];
-	decl String:buff_cooldown[32];
-	decl String:buff_maxuses[32];
-	
 	configLoaded = false;
 	
 	GetCurrentMap(buff_mapname, sizeof(buff_mapname));
@@ -255,49 +242,46 @@ public OnMapStart()
 		configLoaded = true;
 		for(new i = 0; i < 32; i++)
 		{
+			KvGetString(kv, "desc", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ent_desc], 32, buff_temp);			
+			KvGetString(kv, "short_desc", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ent_shortdesc], 32, buff_temp);						
+			KvGetString(kv, "color", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ent_color], 32, buff_temp);
+			KvGetString(kv, "name", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ent_name], 32, buff_temp);
+			KvGetString(kv, "type", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ent_type], 32, buff_temp);
+			KvGetString(kv, "button_type", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ent_buttontype], 32, buff_temp);
+			KvGetString(kv, "maxuses", buff_temp, sizeof(buff_temp));
+			entArray[i][ent_maxuses] = StringToInt(buff_temp);	
+			KvGetString(kv, "cooldown", buff_temp, sizeof(buff_temp));
+			entArray[i][ent_cooldown] = StringToFloat(buff_temp);
 
-			KvGetString(kv, "desc", buff_desc, sizeof(buff_desc));
-			KvGetString(kv, "short_desc", buff_shortdesc, sizeof(buff_shortdesc));
-			KvGetString(kv, "color", buff_color, sizeof(buff_color));
-			KvGetString(kv, "name", buff_name, sizeof(buff_name));
-			KvGetString(kv, "exactname", buff_exactname, sizeof(buff_exactname));
-			KvGetString(kv, "singleactivator", buff_singleactivator, sizeof(buff_singleactivator));
-			KvGetString(kv, "type", buff_type, sizeof(buff_type));
-			KvGetString(kv, "button_type", buff_buttontype, sizeof(buff_buttontype));
-			KvGetString(kv, "chat", buff_chat, sizeof(buff_chat));
-			KvGetString(kv, "hud", buff_hud, sizeof(buff_hud));
-			KvGetString(kv, "maxuses", buff_maxuses, sizeof(buff_maxuses));
-			KvGetString(kv, "cooldown", buff_cooldown, sizeof(buff_cooldown));
-			
-			strcopy(entArray[i][ent_desc], 32, buff_desc);
-			strcopy(entArray[i][ent_shortdesc], 32, buff_shortdesc);
-			strcopy(entArray[i][ent_color], 32, buff_color);
-			strcopy(entArray[i][ent_name], 32, buff_name);
-			strcopy(entArray[i][ent_originalname], 32, buff_name);
-			strcopy(entArray[i][ent_type], 32, buff_type);
-			strcopy(entArray[i][ent_buttontype], 32, buff_buttontype);
-			
-			if(StrEqual(buff_chat, "false"))
-				entArray[i][ent_chat] = false;
-			else
-				entArray[i][ent_chat] = true;	
-			if(StrEqual(buff_hud, "false"))
-				entArray[i][ent_hud] = false;
-			else
-				entArray[i][ent_hud] = true;	
-				
-			if(StrEqual(buff_exactname, "false"))
+			KvGetString(kv, "exactname", buff_temp, sizeof(buff_temp));
+			if(StrEqual(buff_temp, "false"))
 				entArray[i][ent_exactname] = false;
 			else
-				entArray[i][ent_exactname] = true;	
-				
-			if(StrEqual(buff_singleactivator, "true"))
+				entArray[i][ent_exactname] = true;
+			
+			KvGetString(kv, "singleactivator", buff_temp, sizeof(buff_temp));
+			if(StrEqual(buff_temp, "true"))
 				entArray[i][ent_singleactivator] = true;
 			else
-				entArray[i][ent_singleactivator] = false;			
+				entArray[i][ent_singleactivator] = false;		
 			
-			entArray[i][ent_maxuses] = StringToInt(buff_maxuses);
-			entArray[i][ent_cooldown] = StringToFloat(buff_cooldown);
+			KvGetString(kv, "chat", buff_temp, sizeof(buff_temp));
+			if(StrEqual(buff_temp, "false"))
+				entArray[i][ent_chat] = false;
+			else
+				entArray[i][ent_chat] = true;
+			
+			KvGetString(kv, "hud", buff_temp, sizeof(buff_temp));			
+			if(StrEqual(buff_temp, "false"))
+				entArray[i][ent_hud] = false;
+			else
+				entArray[i][ent_hud] = true;			
 				
 			if(!KvGotoNextKey(kv))
 			{
@@ -397,17 +381,20 @@ public OnClientDisconnect(client)
 //-----------------------------------------------------------------------------
 public Action:CS_OnCSWeaponDrop(client, weaponIndex)
 {
-	decl String:playername[32];
-	GetClientName(client, playername, sizeof(playername))	
-	for (new i = 0; i < arrayMax; i++)
+	if(Entity_IsPlayer(client))
 	{
-		if(entArray[i][ent_owner] == client && entArray[i][ent_chat] && entArray[i][ent_id] == weaponIndex && IsPlayerAlive(client))
+		decl String:playername[32];
+		GetClientName(client, playername, sizeof(playername))	
+		for (new i = 0; i < arrayMax; i++)
 		{
-			CPrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000has dropped \x07%s%s", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
-			playername="";
-			strcopy(entArray[i][ent_ownername], 32, playername);
-			entArray[ i ][ ent_owner ] = -1;
-			i=arrayMax;
+			if(entArray[i][ent_owner] == client && entArray[i][ent_chat] && entArray[i][ent_id] == weaponIndex && IsPlayerAlive(client))
+			{
+				CPrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000has dropped \x07%s%s", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+				playername="";
+				strcopy(entArray[i][ent_ownername], 32, playername);
+				entArray[ i ][ ent_owner ] = -1;
+				i=arrayMax;
+			}
 		}
 	}
 }
