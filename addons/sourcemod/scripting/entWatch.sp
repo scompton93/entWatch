@@ -28,6 +28,8 @@ enum entities
 	ent_maxuses,
 	ent_uses,
 	Float:ent_cooldown,
+	bool:ent_hudcooldown,
+	ent_cooldowncount,
 	ent_canuse
 } 
 
@@ -52,6 +54,8 @@ public Plugin:myinfo =
 //-----------------------------------------------------------------------------
 public OnPluginStart()
 {
+	new Handle:global_cooldowns = CreateConVar("entW_cooldowns", "1", "Turns cooldowns/off");
+
 	RegConsoleCmd("entW_find", Command_FindEnts, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("entW_dumpmap", Command_dumpmap, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("hud", Command_dontannoyme);
@@ -61,7 +65,8 @@ public OnPluginStart()
 	
 	hudCookie = RegClientCookie("entWatch_displayhud", "EntWatch DisplayHud", CookieAccess_Protected);
 	
-	CreateTimer(6.0, Timer_DisplayHud, _, TIMER_REPEAT);	
+	CreateTimer(1.0, Timer_DisplayHud, _, TIMER_REPEAT);
+	CreateTimer(1.0, Timer_Cooldowns, _, TIMER_REPEAT);	
 }
 
 //-----------------------------------------------------------------------------
@@ -168,22 +173,20 @@ public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 	{
 		if(entArray[i][ent_singleactivator] == true)
 		{
-			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_owner] == activator && entArray[i][ent_uses] < entArray[i][ent_maxuses])
+			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_owner] == activator && entArray[i][ent_uses] < entArray[i][ent_maxuses] && entArray[i][ent_cooldowncount] == 0)
 			{
 				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
 				entArray[i][ent_uses]++;
-				entArray[i][ent_canuse]=0;
-				CreateTimer(entArray[i][ent_cooldown], Timer_Cooldown, i);
+				entArray[i][ent_cooldowncount] = RoundToNearest(entArray[i][ent_cooldown]);		
 			}			
 		}
 		else if(entArray[i][ent_singleactivator] == false)
 		{
-			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_uses] < entArray[i][ent_maxuses])
+			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_uses] < entArray[i][ent_maxuses] && entArray[i][ent_cooldowncount] == 0)
 			{
 				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
 				entArray[i][ent_uses]++;
-				entArray[i][ent_canuse]=0;
-				CreateTimer(entArray[i][ent_cooldown], Timer_Cooldown, i);
+				entArray[i][ent_cooldowncount] = RoundToNearest(entArray[i][ent_cooldown]);				
 			}			
 		}		
 	}
@@ -193,6 +196,20 @@ public OnMapStart()
 {
 	decl String:buff_mapname[64];
 	decl String:buff_temp[64];
+	
+	decl String:buff_desc[32];
+	decl String:buff_shortdesc[32];
+	decl String:buff_color[32];
+	decl String:buff_name[32];
+	decl String:buff_exactname[32];
+	decl String:buff_singleactivator[32];
+	decl String:buff_type[32];
+	decl String:buff_buttontype[32];
+	decl String:buff_chat[32];
+	decl String:buff_hud[32];
+	decl String:buff_cooldown[32];
+	decl String:buff_hudcooldown[32];
+	decl String:buff_maxuses[32];
 	
 	configLoaded = false;
 	
@@ -217,6 +234,8 @@ public OnMapStart()
 		entArray[i][ent_maxuses] = 0;
 		entArray[i][ent_uses] = 0;
 		entArray[i][ent_cooldown] = 2.0;
+		entArray[i][ent_hudcooldown] = true;
+		entArray[i][ent_cooldowncount] = 0;
 		entArray[i][ent_canuse] = 1;
 		entArray[i][ent_exactname] = false;
 		entArray[i][ent_singleactivator] = false;
@@ -242,46 +261,55 @@ public OnMapStart()
 		configLoaded = true;
 		for(new i = 0; i < 32; i++)
 		{
-			KvGetString(kv, "desc", buff_temp, sizeof(buff_temp));
-			strcopy(entArray[i][ent_desc], 32, buff_temp);			
-			KvGetString(kv, "short_desc", buff_temp, sizeof(buff_temp));
-			strcopy(entArray[i][ent_shortdesc], 32, buff_temp);						
-			KvGetString(kv, "color", buff_temp, sizeof(buff_temp));
-			strcopy(entArray[i][ent_color], 32, buff_temp);
-			KvGetString(kv, "name", buff_temp, sizeof(buff_temp));
-			strcopy(entArray[i][ent_name], 32, buff_temp);
-			KvGetString(kv, "type", buff_temp, sizeof(buff_temp));
-			strcopy(entArray[i][ent_type], 32, buff_temp);
-			KvGetString(kv, "button_type", buff_temp, sizeof(buff_temp));
-			strcopy(entArray[i][ent_buttontype], 32, buff_temp);
-			KvGetString(kv, "maxuses", buff_temp, sizeof(buff_temp));
-			entArray[i][ent_maxuses] = StringToInt(buff_temp);	
-			KvGetString(kv, "cooldown", buff_temp, sizeof(buff_temp));
-			entArray[i][ent_cooldown] = StringToFloat(buff_temp);
 
-			KvGetString(kv, "exactname", buff_temp, sizeof(buff_temp));
-			if(StrEqual(buff_temp, "false"))
-				entArray[i][ent_exactname] = false;
-			else
-				entArray[i][ent_exactname] = true;
+			KvGetString(kv, "desc", buff_desc, sizeof(buff_desc));
+			KvGetString(kv, "short_desc", buff_shortdesc, sizeof(buff_shortdesc));
+			KvGetString(kv, "color", buff_color, sizeof(buff_color));
+			KvGetString(kv, "name", buff_name, sizeof(buff_name));
+			KvGetString(kv, "exactname", buff_exactname, sizeof(buff_exactname));
+			KvGetString(kv, "singleactivator", buff_singleactivator, sizeof(buff_singleactivator));
+			KvGetString(kv, "type", buff_type, sizeof(buff_type));
+			KvGetString(kv, "button_type", buff_buttontype, sizeof(buff_buttontype));
+			KvGetString(kv, "chat", buff_chat, sizeof(buff_chat));
+			KvGetString(kv, "hud", buff_hud, sizeof(buff_hud));
+			KvGetString(kv, "maxuses", buff_maxuses, sizeof(buff_maxuses));
+			KvGetString(kv, "cooldown", buff_cooldown, sizeof(buff_cooldown));
+			KvGetString(kv, "cooldown_hud", buff_hudcooldown, sizeof(buff_hudcooldown));
 			
-			KvGetString(kv, "singleactivator", buff_temp, sizeof(buff_temp));
-			if(StrEqual(buff_temp, "true"))
-				entArray[i][ent_singleactivator] = true;
+			strcopy(entArray[i][ent_desc], 32, buff_desc);
+			strcopy(entArray[i][ent_shortdesc], 32, buff_shortdesc);
+			strcopy(entArray[i][ent_color], 32, buff_color);
+			strcopy(entArray[i][ent_name], 32, buff_name);
+			strcopy(entArray[i][ent_originalname], 32, buff_name);
+			strcopy(entArray[i][ent_type], 32, buff_type);
+			strcopy(entArray[i][ent_buttontype], 32, buff_buttontype);
+
+			if(StrEqual(buff_hudcooldown, "false"))
+				entArray[i][ent_hudcooldown] = false;
 			else
-				entArray[i][ent_singleactivator] = false;		
+				entArray[i][ent_hudcooldown] = true;	
 			
-			KvGetString(kv, "chat", buff_temp, sizeof(buff_temp));
-			if(StrEqual(buff_temp, "false"))
+			if(StrEqual(buff_chat, "false"))
 				entArray[i][ent_chat] = false;
 			else
-				entArray[i][ent_chat] = true;
-			
-			KvGetString(kv, "hud", buff_temp, sizeof(buff_temp));			
-			if(StrEqual(buff_temp, "false"))
+				entArray[i][ent_chat] = true;	
+			if(StrEqual(buff_hud, "false"))
 				entArray[i][ent_hud] = false;
 			else
-				entArray[i][ent_hud] = true;			
+				entArray[i][ent_hud] = true;	
+				
+			if(StrEqual(buff_exactname, "false"))
+				entArray[i][ent_exactname] = false;
+			else
+				entArray[i][ent_exactname] = true;	
+				
+			if(StrEqual(buff_singleactivator, "true"))
+				entArray[i][ent_singleactivator] = true;
+			else
+				entArray[i][ent_singleactivator] = false;			
+			
+			entArray[i][ent_maxuses] = StringToInt(buff_maxuses);
+			entArray[i][ent_cooldown] = StringToFloat(buff_cooldown);
 				
 			if(!KvGotoNextKey(kv))
 			{
@@ -370,8 +398,7 @@ public OnClientDisconnect(client)
 		{
 			CPrintToChatAll("\x07A67CB2[entWatch] \x0700DA00%N \x07A67CB2disconnected while holding \x07%s%s!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			entArray[ i ][ ent_owner ] = -1;
-			strcopy(entArray[i][ent_ownername], 32, "");
-			i=arrayMax;		
+			strcopy(entArray[i][ent_ownername], 32, "");	
 		}	
 	}
 }  
@@ -393,7 +420,6 @@ public Action:CS_OnCSWeaponDrop(client, weaponIndex)
 				playername="";
 				strcopy(entArray[i][ent_ownername], 32, playername);
 				entArray[ i ][ ent_owner ] = -1;
-				i=arrayMax;
 			}
 		}
 	}
@@ -464,20 +490,13 @@ public Action:Command_dontannoyme(client, args)
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-public Action:Timer_Cooldown(Handle:timer, any:index)
-{
-	entArray[index][ent_canuse] = 1;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
 public Action:Timer_DisplayHud(Handle:timer)
 {
 	if(configLoaded)
 	{
 		decl String:szText[254];
 		decl String:buffer[32];
+		decl String:temp[32];
 		
 		for (new i = 1; i < MaxClients; i++)
 		{
@@ -492,8 +511,24 @@ public Action:Timer_DisplayHud(Handle:timer)
 						if(entArray[x][ent_hud] && !StrEqual(entArray[x][ent_ownername], "") )
 						{
 							StrCat(szText, sizeof(szText), entArray[x][ent_shortdesc]);
+							StrCat(szText, sizeof(szText), "[");
+							if(entArray[x][ent_hudcooldown] && entArray[x][ent_uses] < entArray[x][ent_maxuses])
+							{
+								if(entArray[x][ent_cooldowncount] == 0)
+									StrCat(szText, sizeof(szText), "R");
+								else
+								{
+									IntToString(entArray[x][ent_cooldowncount], temp, sizeof(temp));
+									StrCat(szText, sizeof(szText), temp);
+								}
+							}
+							else
+							{
+								StrCat(szText, sizeof(szText), "N/A");
+							}
+							StrCat(szText, sizeof(szText), "]");							
 							StrCat(szText, sizeof(szText), ": ");
-							StrCat(szText, sizeof(szText), entArray[x][ent_ownername]);	
+							StrCat(szText, sizeof(szText), entArray[x][ent_ownername]);
 							
 							StrCat(szText, sizeof(szText), "\n");						
 						}
@@ -516,6 +551,24 @@ public Action:Timer_DisplayHud(Handle:timer)
 	}
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+public Action:Timer_Cooldowns(Handle:timer)
+{
+	for (new i = 0; i < arrayMax; i++)
+	{
+		if(entArray[i][ent_cooldowncount] == 0)
+		{
+		
+		}
+		else
+		{
+			entArray[i][ent_cooldowncount] = entArray[i][ent_cooldowncount] - 1;
+		}
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: SMLib
