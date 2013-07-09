@@ -31,7 +31,7 @@ enum entities
 	bool:ent_hudcooldown,
 	ent_cooldowncount,
 	ent_canuse
-} 
+}
 
 // Now we need a variable that holds the player info
 new entArray[ 32 ][ entities ];
@@ -46,7 +46,7 @@ public Plugin:myinfo =
 	name = "entWatch",
 	author = "Prometheum",
 	description = "#ZOMG #YOLO | Finds entities and hooks events relating to them.",
-	version = "1.3",
+	version = "1.4",
 	url = "https://github.com/Prometheum/entWatch"
 };
 
@@ -57,7 +57,7 @@ public OnPluginStart()
 {
 	global_cooldowns = CreateConVar("entW_cooldowns", "1", "Turns cooldowns/off");
 
-	CreateConVar("sm_entW_version", "1.3", "Current version of entWatch", FCVAR_NOTIFY);
+	CreateConVar("sm_entW_version", "1.4", "Current version of entWatch", FCVAR_NOTIFY);
 	
 	RegConsoleCmd("entW_find", Command_FindEnts, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("entW_dumpmap", Command_dumpmap, "Finds Entitys matching an argument", ADMFLAG_KICK);
@@ -69,132 +69,12 @@ public OnPluginStart()
 	hudCookie = RegClientCookie("entWatch_displayhud", "EntWatch DisplayHud", CookieAccess_Protected);
 	
 	CreateTimer(1.0, Timer_DisplayHud, _, TIMER_REPEAT);
-	CreateTimer(1.0, Timer_Cooldowns, _, TIMER_REPEAT);	
+	CreateTimer(1.0, Timer_Cooldowns, _, TIMER_REPEAT);
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-public OnEntityCreated(entity, const String:classname[])
-{
-	if(configLoaded)
-	{
-		if(StrContains(classname, "weapon", false) != -1)
-		{
-			SDKHook(entity, SDKHook_StartTouch, OnEntityTouch);		
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-public Action:OnEntityTouch(entity, Client)
-{
-	if(Entity_IsPlayer(Client))
-	{
-		decl String:targetname[32];
-		decl String:temp[32];
-		new bool:recordExists=false;
-		
-		Entity_GetTargetName(entity, targetname, sizeof(targetname));
-		
-		new i;
-
-		for(i = 0; i < arrayMax; i++)
-		{
-			if(entArray[i][ent_id] == entity)
-			{
-				recordExists=true;
-			}
-		}
-		
-		if(!recordExists)
-		{
-			for(i = 0; i < arrayMax; i++)
-			{ 
-				if(entArray[i][ent_id] == -1)
-				{
-					strcopy( temp, 32, entArray[i][ent_name]);
-					if(!entArray[i][ent_exactname])
-					{
-						if(StrContains(targetname, temp, false) != -1)
-						{
-							entArray[i][ent_id] = entity;
-							strcopy(entArray[i][ent_name], 32, targetname);
-							HookButton(i);
-							i = arrayMax;
-						}
-					}
-					else
-					{
-						if(strcmp(targetname, temp, false) == 0)
-						{
-							entArray[i][ent_id] = entity;
-							strcopy(entArray[i][ent_name], 32, targetname);
-							HookButton(i);
-							i = arrayMax;
-						}
-					}					
-				}
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-public HookButton(rootEntity)
-{
-	decl String:tempA[32];
-	decl String:tempB[32];
-	for(new i=0; i < GetEntityCount(); i++)
-	{
-		if(IsValidEdict(i))
-		{
-			GetEntityClassname(i, tempA, sizeof(tempA));
-			if(StrEqual(tempA, entArray[rootEntity][ent_buttontype]))
-			{
-				Entity_GetParentName(i, tempB, sizeof(tempB));
-				if(StrEqual(tempB, entArray[rootEntity][ent_name]))
-				{
-					entArray[rootEntity][ent_buttonid] = i;
-					SDKHook(i, SDKHook_Use, OnEntityUse);								
-				}
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
-{
-	for(new i = 0; i < arrayMax; i++)
-	{
-		if(entArray[i][ent_singleactivator] == true)
-		{
-			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_owner] == activator && entArray[i][ent_uses] < entArray[i][ent_maxuses] && entArray[i][ent_cooldowncount] == 0)
-			{
-				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
-				entArray[i][ent_uses]++;
-				entArray[i][ent_cooldowncount] = RoundToNearest(entArray[i][ent_cooldown]);		
-			}			
-		}
-		else if(entArray[i][ent_singleactivator] == false)
-		{
-			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_uses] < entArray[i][ent_maxuses] && entArray[i][ent_cooldowncount] == 0)
-			{
-				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
-				entArray[i][ent_uses]++;
-				entArray[i][ent_cooldowncount] = RoundToNearest(entArray[i][ent_cooldown]);				
-			}			
-		}		
-	}
-}  
-
 public OnMapStart()
 {
 	decl String:buff_mapname[64];
@@ -322,6 +202,75 @@ public OnMapStart()
 		}
 	}
 	CloseHandle(kv);
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+public OnEntityCreated(entity, const String:classname[])
+{
+	if(configLoaded)
+	{
+		if(StrContains(classname, "weapon", false) != -1)
+		{
+			SDKHook(entity, SDKHook_StartTouch, OnEntityTouch);		
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+public Action:OnEntityTouch(entity, Client)
+{
+	new b;
+	new bool:recordExists=false;
+	
+	if(Entity_IsPlayer(Client))
+	{
+		for(new i = 0; i < arrayMax; i++)
+		{
+			if(entArray[i][ent_id] == entity)
+			{
+				recordExists=true;
+			}
+		}
+		
+		if(!recordExists)
+		{
+			b = FindEntityByName(entity);
+			if(b!=-1)
+			HookButton(b);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
+public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
+{
+	for(new i = 0; i < arrayMax; i++)
+	{
+		if(entArray[i][ent_singleactivator] == true)
+		{
+			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_owner] == activator && entArray[i][ent_uses] < entArray[i][ent_maxuses] && entArray[i][ent_cooldowncount] == 0)
+			{
+				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
+				entArray[i][ent_uses]++;
+				entArray[i][ent_cooldowncount] = RoundToNearest(entArray[i][ent_cooldown]);		
+			}			
+		}
+		else if(entArray[i][ent_singleactivator] == false)
+		{
+			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_uses] < entArray[i][ent_maxuses] && entArray[i][ent_cooldowncount] == 0)
+			{
+				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
+				entArray[i][ent_uses]++;
+				entArray[i][ent_cooldowncount] = RoundToNearest(entArray[i][ent_cooldown]);				
+			}			
+		}		
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -557,7 +506,6 @@ public Action:Timer_DisplayHud(Handle:timer)
 	}
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -575,6 +523,65 @@ public Action:Timer_Cooldowns(Handle:timer)
 		}
 	}
 }
+
+//-----------------------------------------------------------------------------
+// Purpose: Entity Functions
+//-----------------------------------------------------------------------------
+public FindEntityByName(entity)
+{
+	decl String:targetname[32];
+	Entity_GetTargetName(entity, targetname, sizeof(targetname));
+	decl String:temp[32];
+	for(new i = 0; i < arrayMax; i++)
+	{ 
+		if(entArray[i][ent_id] == -1)
+		{
+			strcopy( temp, 32, entArray[i][ent_name]);
+			if(!entArray[i][ent_exactname])
+			{
+				if(StrContains(targetname, temp, false) != -1)
+				{
+					entArray[i][ent_id] = entity;
+					strcopy(entArray[i][ent_name], 32, targetname);
+					return i;
+				}
+			}
+			else
+			{
+				if(strcmp(targetname, temp, false) == 0)
+				{
+					entArray[i][ent_id] = entity;
+					strcopy(entArray[i][ent_name], 32, targetname);
+					return i;
+				}
+			}					
+		}
+	}
+	return -1;
+}
+
+public HookButton(rootEntity)
+{
+	decl String:tempA[32];
+	decl String:tempB[32];
+	for(new i=0; i < GetEntityCount(); i++)
+	{
+		if(IsValidEdict(i))
+		{
+			GetEntityClassname(i, tempA, sizeof(tempA));
+			if(StrEqual(tempA, entArray[rootEntity][ent_buttontype]))
+			{
+				Entity_GetParentName(i, tempB, sizeof(tempB));
+				if(StrEqual(tempB, entArray[rootEntity][ent_name]))
+				{
+					entArray[rootEntity][ent_buttonid] = i;
+					SDKHook(i, SDKHook_Use, OnEntityUse);	
+				}
+			}
+		}
+	}
+}
+
 
 //-----------------------------------------------------------------------------
 // Purpose: SMLib
