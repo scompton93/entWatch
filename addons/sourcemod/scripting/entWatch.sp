@@ -8,6 +8,8 @@
 #include <clientprefs>
 #include <morecolors>
 
+new Handle:g_hDropWeapon;
+
 enum entities
 {
 	String:ent_desc[32],
@@ -46,7 +48,7 @@ public Plugin:myinfo =
 	name = "entWatch",
 	author = "Prometheum",
 	description = "#ZOMG #YOLO | Finds entities and hooks events relating to them.",
-	version = "1.4",
+	version = "1.5",
 	url = "https://github.com/Prometheum/entWatch"
 };
 
@@ -57,7 +59,7 @@ public OnPluginStart()
 {
 	global_cooldowns = CreateConVar("entW_cooldowns", "1", "Turns cooldowns/off");
 
-	CreateConVar("sm_entW_version", "1.4", "Current version of entWatch", FCVAR_NOTIFY);
+	CreateConVar("sm_entW_version", "1.5", "Current version of entWatch", FCVAR_NOTIFY);
 	
 	RegConsoleCmd("entW_find", Command_FindEnts, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("entW_dumpmap", Command_dumpmap, "Finds Entitys matching an argument", ADMFLAG_KICK);
@@ -70,6 +72,21 @@ public OnPluginStart()
 	
 	CreateTimer(1.0, Timer_DisplayHud, _, TIMER_REPEAT);
 	CreateTimer(1.0, Timer_Cooldowns, _, TIMER_REPEAT);
+	
+	LoadTranslations("entwatch.phrases");
+	
+	new Handle:hGameConf = LoadGameConfigFile("entwatch.games");
+	if (hGameConf == INVALID_HANDLE)
+	{
+		SetFailState("Unable to load gamedata file entwatch.games.txt");
+	}
+
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hGameConf, SDKConf_Signature, "CSWeaponDrop");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain);
+	PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain);
+	g_hDropWeapon = EndPrepSDKCall();	
 }
 
 //-----------------------------------------------------------------------------
@@ -256,7 +273,7 @@ public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 		{
 			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_owner] == activator && entArray[i][ent_uses] < entArray[i][ent_maxuses] && entArray[i][ent_cooldowncount] == 0)
 			{
-				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
+				PrintToChatAll("\x072570A5[entWatch] \x0700DA00%N \x072570A5%t \x07%s%s", caller, "use", entArray[i][ent_color], entArray[i][ent_desc]);
 				entArray[i][ent_uses]++;
 				entArray[i][ent_cooldowncount] = RoundToNearest(entArray[i][ent_cooldown]);		
 			}			
@@ -265,7 +282,7 @@ public Action:OnEntityUse(entity, activator, caller, UseType:type, Float:value)
 		{
 			if(entArray[i][ent_buttonid] == entity && entArray[i][ent_canuse] == 1 && entArray[i][ent_uses] < entArray[i][ent_maxuses] && entArray[i][ent_cooldowncount] == 0)
 			{
-				CPrintToChatAll("\x072570A5[entWatch] \x07%s%s \x072570A5was used by \x0700DA00%N", entArray[i][ent_color], entArray[i][ent_desc], caller);
+				PrintToChatAll("\x072570A5[entWatch] \x0700DA00%N \x072570A5%t \x07%s%s", caller, "use", entArray[i][ent_color], entArray[i][ent_desc]);
 				entArray[i][ent_uses]++;
 				entArray[i][ent_cooldowncount] = RoundToNearest(entArray[i][ent_cooldown]);				
 			}			
@@ -291,7 +308,7 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 	
 	if(configLoaded)
 	{
-		CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF Type !hud to toggle HUD - Plugin by \x073600FFPrometheum");
+		CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF %t \x073600FFPrometheum & Bauxe", "welcome");
 	}	
 }
 
@@ -313,7 +330,7 @@ public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast
 		{
 			if(entArray[i][ent_chat] && entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1 && IsPlayerAlive(client) && entArray[i][ent_owner] != client)
 			{
-				CPrintToChatAll("\x07FFFF00[entWatch] \x0700DA00%s \x07FFFF00has picked up \x07%s%s", playername, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+				CPrintToChatAll("\x07FFFF00[entWatch] \x0700DA00%s \x07FFFF00%t \x07%s%s", playername, "pickup", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 				entArray[ i ][ ent_owner ] = client;
 				strcopy(entArray[i][ent_ownername], 32, playername);
 				i=arrayMax;
@@ -334,10 +351,11 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 	{
 		if(entArray[i][ent_chat] && entArray[i][ent_owner] == client)
 		{
-			CPrintToChatAll("\x0784289E[entWatch] \x0700DA00%N \x0784289Ehas lost \x07%s%s \x0784289Ethrough their demise!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			CPrintToChatAll("\x0784289E[entWatch] \x0700DA00%N \x0784289E%t \x07%s%s", client, "death", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			entArray[ i ][ ent_owner ] = -1;
 			strcopy(entArray[i][ent_ownername], 32, "");
-			i=arrayMax;		
+			SDKCall(g_hDropWeapon, client, entArray[ i ][ ent_id ], false, false);
+			i=arrayMax;
 		}	
 	}
 }
@@ -348,9 +366,9 @@ public OnClientDisconnect(client)
 	{
 		if(entArray[i][ent_chat] && entArray[i][ent_owner] == client)
 		{
-			CPrintToChatAll("\x07A67CB2[entWatch] \x0700DA00%N \x07A67CB2disconnected while holding \x07%s%s!", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			CPrintToChatAll("\x07A67CB2[entWatch] \x0700DA00%N \x07A67CB2%t \x07%s%s!", client, "disconnect", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			entArray[ i ][ ent_owner ] = -1;
-			strcopy(entArray[i][ent_ownername], 32, "");	
+			strcopy(entArray[i][ent_ownername], 32, "");
 		}	
 	}
 }  
@@ -368,7 +386,7 @@ public Action:CS_OnCSWeaponDrop(client, weaponIndex)
 		{
 			if(entArray[i][ent_owner] == client && entArray[i][ent_chat] && entArray[i][ent_id] == weaponIndex && IsPlayerAlive(client))
 			{
-				CPrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000has dropped \x07%s%s", client, entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+				CPrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000%t \x07%s%s", client, "drop", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 				playername="";
 				strcopy(entArray[i][ent_ownername], 32, playername);
 				entArray[ i ][ ent_owner ] = -1;
@@ -603,4 +621,12 @@ stock Entity_GetTargetName(entity, String:buffer[], size)
 stock Entity_GetParentName(entity, String:buffer[], size)
 {
 	return GetEntPropString(entity, Prop_Data, "m_iParent", buffer, size);
+}
+
+stock Entity_SetParentName(entity, const String:name[], any:...)
+{
+	decl String:format[128];
+	VFormat(format, sizeof(format), name, 3);
+
+	return DispatchKeyValue(entity, "parentname", format);
 }
