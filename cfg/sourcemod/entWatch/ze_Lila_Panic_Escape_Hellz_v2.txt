@@ -45,4 +45,19 @@
 		"cooldown"		"60.0"
 		"maxuses"		"20"
         }
+		"3"
+        {
+		"desc"			"Heal"
+		"short_desc"		"Heal"
+		"color"			"FFFFFF"
+		"name"			"heal_gun"
+		"exactname"		"true"
+		"singleactivator"	"false"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"40.0"
+		"maxuses"		"20"
+        }
 }
