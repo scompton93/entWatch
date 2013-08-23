@@ -48,7 +48,7 @@ public Plugin:myinfo =
 	name = "entWatch",
 	author = "Prometheum",
 	description = "#ZOMG #YOLO | Finds entities and hooks events relating to them.",
-	version = "1.5",
+	version = "1.55",
 	url = "https://github.com/Prometheum/entWatch"
 };
 

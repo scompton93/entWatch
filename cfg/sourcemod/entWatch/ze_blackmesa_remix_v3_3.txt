@@ -92,7 +92,7 @@
 		"cooldown_hud"	"false"
 		"maxuses"		"0"
 	}
-	"4"
+	"6"
 	{
 		"desc"			"SlowRing Generator"
 		"short_desc"		"SlowGun"
@@ -107,7 +107,36 @@
 		"cooldown"		"45.0"
 		"maxuses"		"20"
 	}
-}
-
-
+	"7"
+	{
+		"desc"			"Flamethrower"
+		"short_desc"		"Flamethrower"
+		"color"			"BA2B00"
+		"name"			"lanzaLlamas"
+		"exactname"		"true"
+		"singleactivator"	"true"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"45.0"
 		"cooldown_hud"	"false"
+		"maxuses"		"0"
+	}
+	"8"
+	{
+		"desc"			"Speedgun"
+		"short_desc"		"Speed"
+		"color"			"F4FF19"
+		"name"			"Colorman"
+		"exactname"		"true"
+		"singleactivator"	"true"
+		"type"			"weapon_elite"
+		"button_type"		"func_button"
+		"chat"			"true"
+		"hud"			"true"
+		"cooldown"		"45.0"
+		"cooldown_hud"	"false"
+		"maxuses"		"0"
+	}
+}

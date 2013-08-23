@@ -28,3 +28,8 @@ A Sourcemod plugin capable of watching custom map entities and displaying chat/h
 ## Credits
 * Prometheum - Coding.
 * Bauxe - Map configs/testing/idea.
+
+## Translations
+These were submitted by the community:
+French: https://forums.alliedmods.net/showpost.php?p=2003654&postcount=38
+Chinese: https://forums.alliedmods.net/showpost.php?p=1991021&postcount=31
