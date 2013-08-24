@@ -1,6 +1,10 @@
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
+//==========================================================
+//
+// Name: entWatch
+// Author: Prometheum
+// Description: Monitors entities.
+//
+//==========================================================
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -8,7 +12,13 @@
 #include <clientprefs>
 #include <morecolors>
 
-new Handle:g_hDropWeapon;
+
+#include <entWatchFuncs>
+
+new Handle:dropWeapon;
+new Handle:hudCookie;
+new Handle:globalCooldowns;
+
 
 enum entities
 {
@@ -24,9 +34,11 @@ enum entities
 	bool:ent_chat[32],
 	bool:ent_hud[32],
 	String:ent_ownername[32],
+	String:ent_ownersteamid[32],
 	ent_buttonid,
 	ent_owner,
 	ent_id,
+	ent_hammerid,
 	ent_maxuses,
 	ent_uses,
 	Float:ent_cooldown,
@@ -35,20 +47,17 @@ enum entities
 	ent_canuse
 }
 
-// Now we need a variable that holds the player info
-new entArray[ 32 ][ entities ];
+new entArray[32][ entities];
 new arrayMax = 0;
 
-new bool:configLoaded;
-new Handle:hudCookie;
-new Handle:global_cooldowns;
+new bool:configLoaded = false;
 
 public Plugin:myinfo =
 {
 	name = "entWatch",
 	author = "Prometheum",
 	description = "#ZOMG #YOLO | Finds entities and hooks events relating to them.",
-	version = "1.55",
+	version = "2.0",
 	url = "https://github.com/Prometheum/entWatch"
 };
 
@@ -57,17 +66,17 @@ public Plugin:myinfo =
 //-----------------------------------------------------------------------------
 public OnPluginStart()
 {
-	global_cooldowns = CreateConVar("entW_cooldowns", "1", "Turns cooldowns/off");
+	globalCooldowns = CreateConVar("entW_cooldowns", "1", "Turns cooldowns/off");
 
-	CreateConVar("sm_entW_version", "1.5", "Current version of entWatch", FCVAR_NOTIFY);
+	CreateConVar("sm_entW_version", "2.0", "Current version of entWatch", FCVAR_NOTIFY);
 	
-	RegConsoleCmd("entW_find", Command_FindEnts, "Finds Entitys matching an argument", ADMFLAG_KICK);
-	RegConsoleCmd("entW_dumpmap", Command_dumpmap, "Finds Entitys matching an argument", ADMFLAG_KICK);
 	RegConsoleCmd("hud", Command_dontannoyme);
+
+
 	HookEvent("round_start", Event_RoundStart, EventHookMode_Pre);
-	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Pre);	
-	HookEvent("item_pickup", OnItemPickup);
-	
+	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Pre);
+	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Pre);
+
 	hudCookie = RegClientCookie("entWatch_displayhud", "EntWatch DisplayHud", CookieAccess_Protected);
 	
 	CreateTimer(1.0, Timer_DisplayHud, _, TIMER_REPEAT);
@@ -75,18 +84,6 @@ public OnPluginStart()
 	
 	LoadTranslations("entwatch.phrases");
 	
-	new Handle:hGameConf = LoadGameConfigFile("entwatch.games");
-	if (hGameConf == INVALID_HANDLE)
-	{
-		SetFailState("Unable to load gamedata file entwatch.games.txt");
-	}
-
-	StartPrepSDKCall(SDKCall_Player);
-	PrepSDKCall_SetFromConf(hGameConf, SDKConf_Signature, "CSWeaponDrop");
-	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
-	PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain);
-	PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain);
-	g_hDropWeapon = EndPrepSDKCall();	
 }
 
 //-----------------------------------------------------------------------------
@@ -97,27 +94,7 @@ public OnMapStart()
 	decl String:buff_mapname[64];
 	decl String:buff_temp[64];
 	
-	decl String:buff_desc[32];
-	decl String:buff_shortdesc[32];
-	decl String:buff_color[32];
-	decl String:buff_name[32];
-	decl String:buff_exactname[32];
-	decl String:buff_singleactivator[32];
-	decl String:buff_type[32];
-	decl String:buff_buttontype[32];
-	decl String:buff_chat[32];
-	decl String:buff_hud[32];
-	decl String:buff_cooldown[32];
-	decl String:buff_hudcooldown[32];
-	decl String:buff_maxuses[32];
-	
-	configLoaded = false;
-	
-	GetCurrentMap(buff_mapname, sizeof(buff_mapname));
-	
-	arrayMax = 0;
-	
-	for (new i = 0; i < 32; i++)
+	for(new i = 0; i < 32; i++)
 	{
 		strcopy( entArray[ i ][ ent_desc ], 32, "null" );
 		strcopy( entArray[ i ][ ent_shortdesc ], 32, "" );
@@ -128,22 +105,24 @@ public OnMapStart()
 		entArray[ i ][ ent_chat ] = false;
 		entArray[ i ][ ent_hud ] = false;
 		strcopy( entArray[ i ][ ent_ownername ], 32, "" );
-		entArray[i][ent_buttonid] = -1;
-		entArray[i][ent_id] = -1;
-		entArray[i][ent_owner] = -1;
-		entArray[i][ent_maxuses] = 0;
-		entArray[i][ent_uses] = 0;
-		entArray[i][ent_cooldown] = 2.0;
-		entArray[i][ent_hudcooldown] = true;
-		entArray[i][ent_cooldowncount] = 0;
-		entArray[i][ent_canuse] = 1;
-		entArray[i][ent_exactname] = false;
-		entArray[i][ent_singleactivator] = false;
+		strcopy( entArray[ i ][ ent_ownersteamid ], 32, "" );
+		entArray[ i ][ ent_buttonid ] = -1;
+		entArray[ i ][ ent_id ] = -1;
+		entArray[ i ][ ent_hammerid ] = -1;
+		entArray[ i ][ ent_owner ] = -1;
+		entArray[ i ][ ent_maxuses ] = 0;
+		entArray[ i ][ ent_uses ] = 0;
+		entArray[ i ][ ent_cooldown ] = 2.0;
+		entArray[ i ][ ent_hudcooldown ] = false;
+		entArray[ i ][ ent_cooldowncount ] = 0;
+		entArray[ i ][ ent_canuse ] = 1;
+		entArray[ i ][ ent_exactname ] = false;
+		entArray[ i ][ ent_singleactivator ] = false;
 	}	
 	
-	strcopy(buff_temp, sizeof(buff_temp), "cfg/sourcemod/entWatch/");
-	StrCat(buff_temp, sizeof(buff_temp), buff_mapname);
-	StrCat(buff_temp, sizeof(buff_temp), ".txt");
+	GetCurrentMap(buff_mapname, sizeof(buff_mapname));
+	
+	Format(buff_temp, sizeof(buff_temp), "cfg/sourcemod/entwatch/%s.txt", buff_mapname);
 	
 	LogMessage("Loading %s", buff_temp);
 	
@@ -157,60 +136,57 @@ public OnMapStart()
 	} 
 	else
 	{
-		KvJumpToKey(kv, "0")
 		configLoaded = true;
+		KvJumpToKey(kv, "0")
 		for(new i = 0; i < 32; i++)
 		{
+			KvGetString(kv, "desc", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ ent_desc], 32, buff_temp);
+			
+			KvGetString(kv, "short_desc", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ ent_shortdesc], 32, buff_temp);
+			
+			KvGetString(kv, "color", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ ent_color], 32, buff_temp);
+			
+			KvGetString(kv, "name", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ ent_name], 32, buff_temp);
+			
+			KvGetString(kv, "name", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ ent_originalname], 32, buff_temp);
+			
+			KvGetString(kv, "type", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ ent_type], 32, buff_temp);
+			
+			KvGetString(kv, "button_type", buff_temp, sizeof(buff_temp));
+			strcopy(entArray[i][ ent_buttontype], 32, buff_temp);
+			
+			KvGetString(kv, "hud", buff_temp, sizeof(buff_temp));
+			if(StrEqual(buff_temp, "true"))
+				entArray[i][ ent_hudcooldown] = true;	
+			
+			KvGetString(kv, "chat", buff_temp, sizeof(buff_temp));
+			if(StrEqual(buff_temp, "true"))
+				entArray[i][ ent_chat] = true;	
+				
+			KvGetString(kv, "hud", buff_temp, sizeof(buff_temp));	
+			if(StrEqual(buff_temp, "true"))
+				entArray[i][ ent_hud] = true;	
+			
+			KvGetString(kv, "exactname", buff_temp, sizeof(buff_temp));				
+			if(StrEqual(buff_temp, "true"))
+				entArray[i][ ent_exactname] = true;	
 
-			KvGetString(kv, "desc", buff_desc, sizeof(buff_desc));
-			KvGetString(kv, "short_desc", buff_shortdesc, sizeof(buff_shortdesc));
-			KvGetString(kv, "color", buff_color, sizeof(buff_color));
-			KvGetString(kv, "name", buff_name, sizeof(buff_name));
-			KvGetString(kv, "exactname", buff_exactname, sizeof(buff_exactname));
-			KvGetString(kv, "singleactivator", buff_singleactivator, sizeof(buff_singleactivator));
-			KvGetString(kv, "type", buff_type, sizeof(buff_type));
-			KvGetString(kv, "button_type", buff_buttontype, sizeof(buff_buttontype));
-			KvGetString(kv, "chat", buff_chat, sizeof(buff_chat));
-			KvGetString(kv, "hud", buff_hud, sizeof(buff_hud));
-			KvGetString(kv, "maxuses", buff_maxuses, sizeof(buff_maxuses));
-			KvGetString(kv, "cooldown", buff_cooldown, sizeof(buff_cooldown));
-			KvGetString(kv, "cooldown_hud", buff_hudcooldown, sizeof(buff_hudcooldown));
+			KvGetString(kv, "singleactivator", buff_temp, sizeof(buff_temp));	
+			if(StrEqual(buff_temp, "true"))
+				entArray[i][ ent_singleactivator] = true;			
 			
-			strcopy(entArray[i][ent_desc], 32, buff_desc);
-			strcopy(entArray[i][ent_shortdesc], 32, buff_shortdesc);
-			strcopy(entArray[i][ent_color], 32, buff_color);
-			strcopy(entArray[i][ent_name], 32, buff_name);
-			strcopy(entArray[i][ent_originalname], 32, buff_name);
-			strcopy(entArray[i][ent_type], 32, buff_type);
-			strcopy(entArray[i][ent_buttontype], 32, buff_buttontype);
-
-			if(StrEqual(buff_hudcooldown, "false"))
-				entArray[i][ent_hudcooldown] = false;
-			else
-				entArray[i][ent_hudcooldown] = true;	
+			KvGetString(kv, "maxuses", buff_temp, sizeof(buff_temp));
+			entArray[i][ ent_maxuses] = StringToInt(buff_temp);
 			
-			if(StrEqual(buff_chat, "false"))
-				entArray[i][ent_chat] = false;
-			else
-				entArray[i][ent_chat] = true;	
-			if(StrEqual(buff_hud, "false"))
-				entArray[i][ent_hud] = false;
-			else
-				entArray[i][ent_hud] = true;	
-				
-			if(StrEqual(buff_exactname, "false"))
-				entArray[i][ent_exactname] = false;
-			else
-				entArray[i][ent_exactname] = true;	
-				
-			if(StrEqual(buff_singleactivator, "true"))
-				entArray[i][ent_singleactivator] = true;
-			else
-				entArray[i][ent_singleactivator] = false;			
+			KvGetString(kv, "cooldown", buff_temp, sizeof(buff_temp));
+			entArray[i][ ent_cooldown] = StringToFloat(buff_temp);
 			
-			entArray[i][ent_maxuses] = StringToInt(buff_maxuses);
-			entArray[i][ent_cooldown] = StringToFloat(buff_cooldown);
-				
 			if(!KvGotoNextKey(kv))
 			{
 				arrayMax = i + 1;
@@ -219,47 +195,6 @@ public OnMapStart()
 		}
 	}
 	CloseHandle(kv);
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-public OnEntityCreated(entity, const String:classname[])
-{
-	if(configLoaded)
-	{
-		if(StrContains(classname, "weapon", false) != -1)
-		{
-			SDKHook(entity, SDKHook_StartTouch, OnEntityTouch);		
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-public Action:OnEntityTouch(entity, Client)
-{
-	new b;
-	new bool:recordExists=false;
-	
-	if(Entity_IsPlayer(Client))
-	{
-		for(new i = 0; i < arrayMax; i++)
-		{
-			if(entArray[i][ent_id] == entity)
-			{
-				recordExists=true;
-			}
-		}
-		
-		if(!recordExists)
-		{
-			b = FindEntityByName(entity);
-			if(b!=-1)
-			HookButton(b);
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -297,46 +232,77 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 {
 	for (new i = 0; i < arrayMax; i++)
 	{
-		strcopy( entArray[ i ][ ent_name ], 32, entArray[ i ][ent_originalname] );
+		strcopy( entArray[ i ][ ent_name ], 32, entArray[ i ][ ent_originalname] );
 		strcopy( entArray[ i ][ ent_ownername ], 32, "" );
-		entArray[i][ent_buttonid] = -1;
-		entArray[i][ent_id] = -1;
-		entArray[i][ent_owner] = -1;
-		entArray[i][ent_uses] = 0;
-		entArray[i][ent_canuse] = 1;
+		entArray[i][ ent_buttonid] = -1;
+		entArray[i][ ent_id] = -1;
+		entArray[i][ ent_owner] = -1;
+		entArray[i][ ent_uses] = 0;
+		entArray[i][ ent_canuse] = 1;
+		entArray[ i ][ ent_hammerid ] = -1;
 	}
 	
 	if(configLoaded)
 	{
-		CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF %t \x073600FFPrometheum & Bauxe", "welcome");
+		CPrintToChatAll("\x073600FF[entWatch]\x0701A8FF %t \x073600FFPrometheum", "welcome");
 	}	
 }
 
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-public Action:OnItemPickup(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:OnWeaponEquip(client, weapon) 
 {
 	decl String:playername[32];	
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	
 	GetClientName(client, playername, sizeof(playername))
 	
-	new iWeaponEnt = -1;
-	for(new iSlot=0; iSlot<5; iSlot++)
+	decl String:targetname[32];
+	Entity_GetTargetName(weapon, targetname, sizeof(targetname));	
+
+	for (new i = 0; i < arrayMax; i++)
 	{
-		iWeaponEnt = GetPlayerWeaponSlot(client, iSlot); 
-		for (new i = 0; i < arrayMax; i++)
+		if(entArray[i][ ent_hammerid] != -1)
 		{
-			if(entArray[i][ent_chat] && entArray[i][ent_id] == iWeaponEnt && entArray[i][ent_id] != -1 && IsPlayerAlive(client) && entArray[i][ent_owner] != client)
+			if(Entity_GetHammerId(weapon) == entArray[i][ ent_hammerid])
 			{
-				CPrintToChatAll("\x07FFFF00[entWatch] \x0700DA00%s \x07FFFF00%t \x07%s%s", playername, "pickup", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+				entArray[i][ ent_id] = weapon;
+				if(entArray[i][ ent_chat])
+					CPrintToChatAll("\x07FFFF00[entWatch] \x0700C900%s \x07FFFF00%t \x07%s%s", playername, "pickup", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+				strcopy(entArray[i][ent_name], 32, targetname);
 				entArray[ i ][ ent_owner ] = client;
-				strcopy(entArray[i][ent_ownername], 32, playername);
-				i=arrayMax;
-				iSlot=5;				
-			}	
+				strcopy(entArray[i][ ent_ownername], 32, playername);
+				HookButton(i);				
+				break;
+			}
 		}
+		else if(entArray[i][ ent_exactname])
+		{
+			if(strcmp(targetname, entArray[i][ ent_name], false) == 0)
+			{
+				entArray[i][ ent_id] = weapon;
+				if(entArray[i][ ent_chat])
+					CPrintToChatAll("\x07FFFF00[entWatch] \x0700C900%s \x07FFFF00%t \x07%s%s", playername, "pickup", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+				entArray[ i ][ ent_owner ] = client;
+				strcopy(entArray[i][ ent_ownername], 32, playername);
+				HookButton(i);				
+				break;
+			}
+		}
+		else if(!entArray[i][ ent_exactname])
+		{
+			if(StrContains(targetname, entArray[i][ ent_name], false) != -1)
+			{
+				entArray[i][ ent_id] = weapon;
+				if(entArray[i][ ent_chat])
+					CPrintToChatAll("\x07FFFF00[entWatch] \x0700C900%s \x07FFFF00%t \x07%s%s", playername, "pickup", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+				entArray[ i ][ ent_owner ] = client;
+				strcopy(entArray[i][ent_name], 32, targetname);
+				strcopy(entArray[i][ ent_ownername], 32, playername);
+				HookButton(i);
+				break;					
+			}
+		}	
+
 	}
 }
 
@@ -349,13 +315,16 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 	
 	for (new i = 0; i < arrayMax; i++)
 	{
-		if(entArray[i][ent_chat] && entArray[i][ent_owner] == client)
+		if(entArray[i][ ent_owner] == client)
 		{
-			CPrintToChatAll("\x0784289E[entWatch] \x0700DA00%N \x0784289E%t \x07%s%s", client, "death", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			if(entArray[i][ ent_chat])
+				CPrintToChatAll("\x0784289E[entWatch] \x0700C900%N \x0784289E%t \x07%s%s", client, "death", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
 			entArray[ i ][ ent_owner ] = -1;
-			strcopy(entArray[i][ent_ownername], 32, "");
-			SDKCall(g_hDropWeapon, client, entArray[ i ][ ent_id ], false, false);
-			i=arrayMax;
+			strcopy(entArray[i][ ent_ownername], 32, "");
+			SDKCall(dropWeapon, client, entArray[ i ][ ent_id ], false, false);
+			entArray[ i ][ ent_hammerid ] = Entity_GetHammerId(entArray[ i ][ ent_id ]);
+			entArray[ i ][ ent_id ] = -1;
+			break;
 		}	
 	}
 }
@@ -364,12 +333,20 @@ public OnClientDisconnect(client)
 {
 	for (new i = 0; i < arrayMax; i++)
 	{
-		if(entArray[i][ent_chat] && entArray[i][ent_owner] == client)
+		if(entArray[i][ ent_owner] == client)
 		{
-			CPrintToChatAll("\x07A67CB2[entWatch] \x0700DA00%N \x07A67CB2%t \x07%s%s!", client, "disconnect", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			if(entArray[i][ ent_chat])
+				CPrintToChatAll("\x07A67CB2[entWatch] \x0700C900%N \x07A67CB2%t \x07%s%s!", client, "disconnect", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			strcopy(entArray[i][ ent_ownername], 32, "");
 			entArray[ i ][ ent_owner ] = -1;
-			strcopy(entArray[i][ent_ownername], 32, "");
+			entArray[ i ][ ent_hammerid ] = Entity_GetHammerId(entArray[ i ][ ent_id ]);
+			entArray[ i ][ ent_id ] = -1;
+			break;
 		}	
+	}
+	if (IsClientInGame(client))
+	{
+		SDKUnhook(client, SDKHook_WeaponEquip, OnWeaponEquip)
 	}
 }  
 
@@ -378,65 +355,18 @@ public OnClientDisconnect(client)
 //-----------------------------------------------------------------------------
 public Action:CS_OnCSWeaponDrop(client, weaponIndex)
 {
-	if(IsClientConnected(client))
-	{
-		decl String:playername[32];
-		GetClientName(client, playername, sizeof(playername))	
-		for (new i = 0; i < arrayMax; i++)
-		{
-			if(entArray[i][ent_owner] == client && entArray[i][ent_chat] && entArray[i][ent_id] == weaponIndex && IsPlayerAlive(client))
-			{
-				CPrintToChatAll("\x079E0000[entWatch] \x0700DA00%N \x079E0000%t \x07%s%s", client, "drop", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
-				playername="";
-				strcopy(entArray[i][ent_ownername], 32, playername);
-				entArray[ i ][ ent_owner ] = -1;
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-public Action:Command_FindEnts(client, args)
-{
-	new String:namea[32];
-	new String:namebuf[32];
-	
-	new String: arg1[32];
-	GetCmdArg(1, arg1, sizeof(arg1) );
-	for (new i=0; i<=GetEntityCount(); i++)
-	{
-		if(IsValidEdict(i))
-		{
-			GetEdictClassname(i, namea, sizeof(namea))
-			GetEntPropString(i, Prop_Data, "m_iName", namebuf, sizeof(namebuf));
-			
-			if(StrEqual(namea, arg1))
-			{
-				PrintToConsole(client, "%d |  Name: %s, Type: %s", i, namebuf, namea);
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-public Action:Command_dumpmap(client, args)
-{
-	PrintToConsole(client, "\n[entWatch]\nIf the ID is -1 it can't find the ent\n");
 	for (new i = 0; i < arrayMax; i++)
 	{
-		CPrintToChatAll("\n");
-		CPrintToChatAll("%d | %s", i, entArray[i][ent_desc]);
-		CPrintToChatAll("%d | %s", i, entArray[i][ent_shortdesc]);
-		CPrintToChatAll("%d | %s", i, entArray[i][ent_color]);
-		CPrintToChatAll("%d | %s", i, entArray[i][ent_name]);
-		CPrintToChatAll("%d | %s", i, entArray[i][ent_type]);
-		CPrintToChatAll("%d | %s", i, entArray[i][ent_ownername]);
-		CPrintToChatAll("%d | %d", i, entArray[i][ent_id]);
-		CPrintToChatAll("%d | %d", i, entArray[i][ent_owner]);
+		if(entArray[i][ ent_owner] == client && entArray[i][ ent_id] == weaponIndex)
+		{
+			if(entArray[i][ ent_chat])
+				CPrintToChatAll("\x079E0000[entWatch] \x0700C900%s \x079E0000%t \x07%s%s", entArray[i][ ent_ownername], "drop", entArray[ i ][ ent_color ], entArray[ i ][ ent_desc ]);
+			strcopy(entArray[i][ ent_ownername], 32, "");
+			entArray[ i ][ ent_owner ] = -1;
+			entArray[ i ][ ent_hammerid ] = Entity_GetHammerId(entArray[ i ][ ent_id ]);
+			entArray[ i ][ ent_id ] = -1;
+			break;
+		}
 	}
 }
 
@@ -460,13 +390,23 @@ public Action:Command_dontannoyme(client, args)
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
+public Action:Command_ents(client, args)
+{
+	new i = 1;
+
+	PrintToConsole(client, "%d", entArray[i][ ent_cooldowncount]);
+
+}
+
+//-----------------------------------------------------------------------------
+// Purpose:
+//-----------------------------------------------------------------------------
 public Action:Timer_DisplayHud(Handle:timer)
 {
 	if(configLoaded)
 	{
 		decl String:szText[254];
 		decl String:buffer[32];
-		decl String:temp[32];
 		
 		for (new i = 1; i < MaxClients; i++)
 		{
@@ -476,34 +416,24 @@ public Action:Timer_DisplayHud(Handle:timer)
 				GetClientCookie(i, hudCookie, buffer, sizeof(buffer));
 				if(StrEqual(buffer, "0") && IsClientConnected(i))
 				{
-					for (new x = 0; x < 16; x++)
+					for (new x = 0; x < 32; x++)
 					{
-						if(entArray[x][ent_hud] && !StrEqual(entArray[x][ent_ownername], "") )
+						if(entArray[x][ ent_hud] && !StrEqual(entArray[x][ ent_ownername], "") && GetConVarInt(globalCooldowns) == 1)
 						{
-							StrCat(szText, sizeof(szText), entArray[x][ent_shortdesc]);
-							if(GetConVarInt(global_cooldowns) == 1)
+							if(entArray[x][ ent_hudcooldown] && entArray[x][ ent_uses] < entArray[x][ ent_maxuses])
 							{
-								StrCat(szText, sizeof(szText), "[");
-								if(entArray[x][ent_hudcooldown] && entArray[x][ent_uses] < entArray[x][ent_maxuses])
-								{
-									if(entArray[x][ent_cooldowncount] == 0)
-										StrCat(szText, sizeof(szText), "R");
-									else
-									{
-										IntToString(entArray[x][ent_cooldowncount], temp, sizeof(temp));
-										StrCat(szText, sizeof(szText), temp);
-									}
-								}
+								if(entArray[x][ ent_cooldowncount] == 0)
+									Format(szText, sizeof(szText), "%s[%s]: %s", entArray[x][ ent_shortdesc], "R", entArray[x][ ent_ownername]);		
 								else
 								{
-									StrCat(szText, sizeof(szText), "N/A");
+									Format(szText, sizeof(szText), "%s[%d]: %s", entArray[x][ ent_shortdesc], entArray[x][ ent_cooldowncount], entArray[x][ ent_ownername]);		
 								}
-								StrCat(szText, sizeof(szText), "]");	
+							}
+							else
+							{
+								Format(szText, sizeof(szText), "%s[%s]: %s", entArray[x][ ent_shortdesc], "N/A", entArray[x][ ent_ownername]);		
+								
 							}							
-							StrCat(szText, sizeof(szText), ": ");
-							StrCat(szText, sizeof(szText), entArray[x][ent_ownername]);
-							
-							StrCat(szText, sizeof(szText), "\n");						
 						}
 					}
 					new Handle:hBuffer = StartMessageOne("KeyHintText", i);
@@ -531,102 +461,50 @@ public Action:Timer_Cooldowns(Handle:timer)
 {
 	for (new i = 0; i < arrayMax; i++)
 	{
-		if(entArray[i][ent_cooldowncount] == 0)
+		if(entArray[i][ ent_cooldowncount] == 0)
 		{
 		
 		}
 		else
 		{
-			entArray[i][ent_cooldowncount] = entArray[i][ent_cooldowncount] - 1;
+			entArray[i][ ent_cooldowncount] = entArray[i][ ent_cooldowncount] - 1;
 		}
 	}
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Entity Functions
+// Purpose:
 //-----------------------------------------------------------------------------
-public FindEntityByName(entity)
-{
-	decl String:targetname[32];
-	Entity_GetTargetName(entity, targetname, sizeof(targetname));
-	decl String:temp[32];
-	for(new i = 0; i < arrayMax; i++)
-	{ 
-		if(entArray[i][ent_id] == -1)
-		{
-			strcopy( temp, 32, entArray[i][ent_name]);
-			if(!entArray[i][ent_exactname])
-			{
-				if(StrContains(targetname, temp, false) != -1)
-				{
-					entArray[i][ent_id] = entity;
-					strcopy(entArray[i][ent_name], 32, targetname);
-					return i;
-				}
-			}
-			else
-			{
-				if(strcmp(targetname, temp, false) == 0)
-				{
-					entArray[i][ent_id] = entity;
-					strcopy(entArray[i][ent_name], 32, targetname);
-					return i;
-				}
-			}					
-		}
-	}
-	return -1;
-}
-
 public HookButton(rootEntity)
 {
-	decl String:tempA[32];
-	decl String:tempB[32];
+	if(rootEntity == -1)
+		return;
+
+	decl String:EntityClassname[32];
+	decl String:EntityParent[32];
 	for(new i=0; i < GetEntityCount(); i++)
 	{
 		if(IsValidEdict(i))
 		{
-			GetEntityClassname(i, tempA, sizeof(tempA));
-			if(StrEqual(tempA, entArray[rootEntity][ent_buttontype]))
+			GetEntityClassname(i, EntityClassname, sizeof(EntityClassname));
+			if(StrEqual(EntityClassname, entArray[rootEntity][ ent_buttontype]))
 			{
-				Entity_GetParentName(i, tempB, sizeof(tempB));
-				if(StrEqual(tempB, entArray[rootEntity][ent_name]))
+				Entity_GetParentName(i, EntityParent, sizeof(EntityParent));
+				if(StrEqual(EntityParent, entArray[rootEntity][ ent_name]))
 				{
-					entArray[rootEntity][ent_buttonid] = i;
+					entArray[rootEntity][ ent_buttonid] = i;
 					SDKHook(i, SDKHook_Use, OnEntityUse);	
+					
 				}
 			}
 		}
 	}
 }
 
-
 //-----------------------------------------------------------------------------
-// Purpose: SMLib
+// Purpose:
 //-----------------------------------------------------------------------------
-stock bool:Entity_IsPlayer(entity)
+public OnClientPutInServer(client)
 {
-	if (entity < 1 || entity > MaxClients) {
-		return false;
-	}
-	
-	return true;
-}
-
-stock Entity_GetTargetName(entity, String:buffer[], size)
-{
-	return GetEntPropString(entity, Prop_Data,  "m_iName", buffer, size);
-}
-
-stock Entity_GetParentName(entity, String:buffer[], size)
-{
-	return GetEntPropString(entity, Prop_Data, "m_iParent", buffer, size);
-}
-
-stock Entity_SetParentName(entity, const String:name[], any:...)
-{
-	decl String:format[128];
-	VFormat(format, sizeof(format), name, 3);
-
-	return DispatchKeyValue(entity, "parentname", format);
-}
+	SDKHook(client, SDKHook_WeaponEquip, OnWeaponEquip)
+} 
