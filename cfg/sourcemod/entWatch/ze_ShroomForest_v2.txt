@@ -12,7 +12,8 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"mode"			"3"
+		"mode"			"4"
+		"cooldown"		"1.0"
 		"maxuses"		"1" 
         }
         "1"
