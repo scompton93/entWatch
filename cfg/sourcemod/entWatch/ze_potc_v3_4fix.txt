@@ -7,13 +7,12 @@
 		"color"			"120061"
 		"name"			"jackpistol"
 		"exactname"		"true"
-		"singleactivator"	"false"
+		"singleactivator"	"true"
 		"type"			"weapon_deagle"
 		"button_type"		"physbox_multi"
 		"chat"			"true"
 		"hud"			"true"
-		"cooldown"		"10.0"
-		"cooldown_hud"	"false"
+		"mode"			"3"
 		"maxuses"		"1" 
         }
 }

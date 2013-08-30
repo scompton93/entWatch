@@ -7,13 +7,13 @@
 		"color"			"FFFFFF"
 		"name"			"Gun_Heal"
 		"exactname"		"true"
-		"singleactivator"	"false"
+		"singleactivator"	"true"
 		"type"			"weapon_elite"
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"40.0"
-		"maxuses"		"20"
 	}
 	"1"
 	{
@@ -22,13 +22,13 @@
 		"color"			"BF6C00"
 		"name"			"Gun_Ammo"
 		"exactname"		"true"
-		"singleactivator"	"false"
+		"singleactivator"	"true"
 		"type"			"weapon_elite"
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"40.0"
-		"maxuses"		"20"
 	}
 	"2"
 	{
@@ -37,13 +37,13 @@
 		"color"			"29BF00"
 		"name"			"Gun_Laser"
 		"exactname"		"true"
-		"singleactivator"	"false"
+		"singleactivator"	"true"
 		"type"			"weapon_elite"
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"60.0"
-		"maxuses"		"20"
 	}
 	"3"
 	{
@@ -52,13 +52,13 @@
 		"color"			"009CBF"
 		"name"			"Gun_Freeze"
 		"exactname"		"true"
-		"singleactivator"	"false"
+		"singleactivator"	"true"
 		"type"			"weapon_elite"
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"50.0"
-		"maxuses"		"20"
 	}
 	"4"
 	{
@@ -67,12 +67,12 @@
 		"color"			"BF0000"
 		"name"			"Gun_Barrel"
 		"exactname"		"true"
-		"singleactivator"	"false"
+		"singleactivator"	"true"
 		"type"			"weapon_elite"
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"50.0"
-		"maxuses"		"20"
 	}
 }

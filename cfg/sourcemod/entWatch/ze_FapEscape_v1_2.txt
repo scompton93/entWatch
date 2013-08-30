@@ -12,8 +12,8 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"150.0"
-		"maxuses"		"5"
         }
         "1"
         {
@@ -27,8 +27,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"cooldown"		"150.0"
-		"cooldown_hud"	"false"
+		"mode"			"3"
 		"maxuses"		"1"
         }
         "2"
@@ -43,8 +42,8 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"60.0"
-		"maxuses"		"10"
         }
         "3"
         {
@@ -58,9 +57,8 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"cooldown"		"60.0"
-		"cooldown_hud"	"false"
-		"maxuses"		"0"
+		"mode"			"3"
+		"maxuses"		"5"
         }
         "4"
         {
@@ -74,9 +72,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"cooldown"		"60.0"
-		"cooldown_hud"	"false"
-		"maxuses"		"0"
+		"mode"			"2"
         }
         "5"
         {
@@ -90,9 +86,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"cooldown"		"60.0"
-		"cooldown_hud"	"false"
-		"maxuses"		"0"
+		"mode"			"5"
         }
         "6"
         {
@@ -106,9 +100,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"cooldown"		"60.0"
-		"cooldown_hud"	"false"
-		"maxuses"		"0"
+		"mode"			"5"
         }
 	"7"
         {
@@ -122,8 +114,8 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"45.0"
-		"maxuses"		"20"
         }
         "8"
         {
@@ -137,8 +129,6 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"cooldown"		"150.0"
-		"cooldown_hud"	"false"
-		"maxuses"		"0"
+		"mode"			"5"
         }
 }

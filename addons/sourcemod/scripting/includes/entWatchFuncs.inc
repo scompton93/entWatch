@@ -41,4 +41,3 @@ stock Entity_GetHammerId(entity)
 {	
 	return GetEntProp(entity, Prop_Data, "m_iHammerID");
 }
-

@@ -12,8 +12,8 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"90.0"
-		"maxuses"		"9"
         }
         "1"
         {
@@ -27,8 +27,8 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"40.0"
-		"maxuses"		"20"
         }
         "2"
         {
@@ -42,7 +42,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
+		"mode"			"1"
 		"cooldown"		"40.0"
-		"maxuses"		"20"
         }
 }
