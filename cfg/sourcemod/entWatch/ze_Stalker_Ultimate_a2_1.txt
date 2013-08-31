@@ -49,7 +49,7 @@
 		"desc"			"Meat Chunk"
 		"short_desc"		"Meat"
 		"color"			"cbcbcb"
-		"name"			"weapon_meatchunk2"
+		"name"			"weapon_meatchunk"
 		"exactname"		"true"
 		"singleactivator"	"true"
 		"type"			"weapon_elite"
