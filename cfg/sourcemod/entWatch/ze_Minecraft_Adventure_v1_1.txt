@@ -12,7 +12,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"mode"			"5"
+		"mode"			"2"
         }
         "1"
 		{
@@ -100,7 +100,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"mode"			"5"
+		"mode"			"2"
         } 
 		"7"
         {
@@ -130,7 +130,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"mode"			"5"
+		"mode"			"2"
         }
         "9"
         {
@@ -159,7 +159,7 @@
 		"button_type"		"func_button"
 		"chat"			"true"
 		"hud"			"true"
-		"mode"			"5"
+		"mode"			"2"
         }
         "11"
         {
