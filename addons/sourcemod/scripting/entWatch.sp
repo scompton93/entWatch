@@ -504,7 +504,7 @@ public Action:Command_Transfer(client, args)
 			TeleportEntity(entid, vec, NULL_VECTOR, NULL_VECTOR);
 		}
 	}
-	CPrintToChatAll("%s[entWatch] %s%N %sis transferring \x07%s%s %sfrom %s%N %sto %s%N", color_warning, color_name, client, color_warning, entArray[ index ][ ent_color ], entArray[ index ][ ent_shortdesc ], color_warning, color_name, target, color_warning, color_name, recep);
+	CPrintToChatAll("\x07%s[entWatch] \x07%s%N \x07%sis transferring \x07%s%s \x07%sfrom \x07%s%N \x07%sto \x07%s%N", color_tag, color_name, client, color_warning, entArray[ index ][ ent_color ], entArray[ index ][ ent_shortdesc ], color_warning, color_name, target, color_warning, color_name, recep);
 	LogMessage("%N is transferring %s from %N to %N", client, entArray[ index ][ ent_shortdesc ], target, recep);
 	return Plugin_Handled;
 }
