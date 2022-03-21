@@ -23,8 +23,7 @@ A Sourcemod plugin capable of watching custom map entities and displaying chat/h
   * entW_dumpmap - Dumps all the entities it has loaded into memory. (-1 Is the value of an entity until it finds the entity. entities are not found until they are picked up).
   * entW_find - Usage: "entw_find weapon_elite" this will output every entity matching weapon_elite on the map, use the classnames for configs.
   * There is also no reason why this wouldn't support other gamemodes featuring map weapons.
-* Theres no real support for this but if you email me (sean.compton@mail.ru) I will do my best to help.
-* Use Hammer to find entities. Use BSPSrc to decompile instead of vmex.
+ * Use Hammer to find entities. Use BSPSrc to decompile instead of vmex.
 
 ## Credits
 * Prometheum - Coding.
