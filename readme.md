@@ -26,7 +26,7 @@ A Sourcemod plugin capable of watching custom map entities and displaying chat/h
  * Use Hammer to find entities. Use BSPSrc to decompile instead of vmex.
 
 ## Credits
-* Prometheum - Coding.
+* scompton93 - Coding.
 * Bauxe - Map configs/testing/idea.
 * Nymphali - Various configs.
 
